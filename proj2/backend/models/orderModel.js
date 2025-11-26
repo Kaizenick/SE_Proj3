@@ -24,6 +24,21 @@ const orderSchema = new mongoose.Schema({
 
   date: { type: Date, default: Date.now },
   payment: { type: Boolean, default: false },
+
+  // ⭐ NEW: rating / feedback fields
+  rating: {
+    type: Number,
+    min: 1,
+    max: 5,
+  },
+  feedback: {
+    type: String,
+    trim: true,
+    maxlength: 500,
+  },
+  ratedAt: {
+    type: Date,
+  },
 });
 
 const orderModel =
