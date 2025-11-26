@@ -1,9 +1,10 @@
 import mongoose from "mongoose";
 
+const MONGO_URI =
+  process.env.MONGODB_URI || "mongodb://localhost:27018/food-del";
+
 export const connectDB = async () => {
   await mongoose
-    .connect(
-      "mongodb+srv://SE_G25:SE_G25@cluster0.xle9ert.mongodb.net/food-del"
-    )
+    .connect(MONGO_URI)
     .then(() => console.log("DB Connected"));
 };
