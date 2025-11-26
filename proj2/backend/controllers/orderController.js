@@ -33,7 +33,10 @@ const STATUS_VALUES = new Set(Object.values(STATUS));
  */
 const ALLOWED_TRANSITIONS = {
   [STATUS.PROCESSING]: new Set([STATUS.OUT_FOR_DELIVERY, STATUS.REDISTRIBUTE]),
-  [STATUS.OUT_FOR_DELIVERY]: new Set([STATUS.DELIVERED, STATUS.REDISTRIBUTE]),
+  [STATUS.OUT_FOR_DELIVERY]: new Set([
+    STATUS.DELIVERED,
+    STATUS.REDISTRIBUTE,
+  ]),
   [STATUS.REDISTRIBUTE]: new Set([
     STATUS.PROCESSING,
     STATUS.CANCELLED,
@@ -419,6 +422,75 @@ const assignShelter = async (req, res) => {
   }
 };
 
+/**
+ * Allows a user to rate a delivered order and leave optional feedback.
+ * Only the owner (or claimer) of the order can rate it, and only when status is Delivered.
+ */
+const rateOrder = async (req, res) => {
+  try {
+    const { orderId, rating, feedback } = req.body;
+    const userId = req.body.userId; // set by auth middleware
+
+    if (!orderId || rating == null) {
+      return res.json({
+        success: false,
+        message: "orderId and rating are required",
+      });
+    }
+
+    const numericRating = Number(rating);
+    if (
+      !Number.isFinite(numericRating) ||
+      numericRating < 1 ||
+      numericRating > 5
+    ) {
+      return res.json({
+        success: false,
+        message: "Rating must be a number between 1 and 5",
+      });
+    }
+
+    const order = await orderModel.findById(orderId);
+    if (!order) {
+      return res.json({ success: false, message: "Order not found" });
+    }
+
+    // owner is either original user or claimer
+    const ownerId = order.claimedBy || order.userId;
+    if (!ownerId || ownerId.toString() !== userId) {
+      return res.json({
+        success: false,
+        message: "You can only rate your own orders",
+      });
+    }
+
+    if (order.status !== STATUS.DELIVERED) {
+      return res.json({
+        success: false,
+        message: "You can rate an order only after it is delivered",
+      });
+    }
+
+    order.rating = numericRating;
+    order.feedback = (feedback || "").trim() || undefined;
+    order.ratedAt = new Date();
+
+    await order.save();
+
+    return res.json({
+      success: true,
+      message: "Thank you for your feedback",
+      data: order,
+    });
+  } catch (err) {
+    console.error("rateOrder error:", err);
+    return res.json({
+      success: false,
+      message: "Error while rating order",
+    });
+  }
+};
+
 export {
   placeOrder,
   listOrders,
@@ -429,4 +501,5 @@ export {
   cancelOrder,
   assignShelter,
   claimOrder,
+  rateOrder, // 👈 NEW EXPORT
 };
