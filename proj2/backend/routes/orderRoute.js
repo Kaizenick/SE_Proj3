@@ -10,7 +10,8 @@ import {
   cancelOrder,
   claimOrder,
   assignShelter,
-  rateOrder, // 👈 NEW IMPORT
+  rateOrder, 
+  driverAvailableOrders,
 } from "../controllers/orderController.js";
 
 const orderRouter = express.Router();
@@ -25,7 +26,8 @@ orderRouter.post("/placecod", authMiddleware, placeOrderCod);
 orderRouter.post("/claim", authMiddleware, claimOrder);
 orderRouter.post("/assign-shelter", assignShelter);
 
-// ⭐ NEW route – user rates a delivered order
+// NEW route – user rates a delivered order
 orderRouter.post("/rate", authMiddleware, rateOrder);
+orderRouter.get("/driver/available", driverAvailableOrders);
 
 export default orderRouter;

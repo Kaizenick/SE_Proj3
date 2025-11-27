@@ -526,6 +526,24 @@ const rateOrder = async (req, res) => {
   }
 };
 
+const driverAvailableOrders = async (req, res) => {
+  try {
+    // Simple version: give all orders, newest first
+    const orders = await orderModel.find({}).sort({ date: -1 });
+
+    return res.json({
+      success: true,
+      data: orders,
+    });
+  } catch (error) {
+    console.error("driverAvailableOrders error:", error);
+    return res.json({
+      success: false,
+      message: "Error fetching orders for driver",
+    });
+  }
+};
+
 export {
   placeOrder,
   listOrders,
@@ -537,4 +555,5 @@ export {
   assignShelter,
   claimOrder,
   rateOrder,
+  driverAvailableOrders,
 };

@@ -1,7 +1,7 @@
 import mongoose from "mongoose";
 
 const MONGO_URI =
-  process.env.MONGODB_URI || "mongodb://localhost:27018/food-del";
+  process.env.MONGODB_URI || "mongodb://127.0.0.1:27018/food-del";
 
 export const connectDB = async () => {
   await mongoose

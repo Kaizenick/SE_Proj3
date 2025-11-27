@@ -12,6 +12,9 @@ import "react-toastify/dist/ReactToastify.css";
 import Verify from "./pages/Verify/Verify";
 import NotificationListener from "./components/NotificationListener/NotificationListener";
 import { Toaster } from "react-hot-toast";
+import DriverRegister from "./pages/DriverRegister.jsx";
+import DriverLogin from "./pages/DriverLogin.jsx";
+import DriverOrders from "./pages/DriverOrders.jsx";
 
 const App = () => {
   const [showLogin, setShowLogin] = useState(false);
@@ -30,6 +33,9 @@ const App = () => {
           <Route path="/order" element={<PlaceOrder />} />
           <Route path="/myorders" element={<MyOrders />} />
           <Route path="/verify" element={<Verify />} />
+          <Route path="/driver/register" element={<DriverRegister />} />
+          <Route path="/driver/login" element={<DriverLogin />} />
+          <Route path="/driver/orders" element={<DriverOrders />} />
         </Routes>
       </div>
       <Footer />

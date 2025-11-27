@@ -26,6 +26,16 @@ const userSchema = new mongoose.Schema({
     enum: ["any", "no-sweets"],
     default: "any",
   },
+  isAdmin: {
+      type: Boolean,
+      default: false,
+    },
+
+    //  driver flag (NEW)
+    isDriver: {
+      type: Boolean,
+      default: false,
+    },
 });
 
 const userModel = mongoose.models.user || mongoose.model("user", userSchema);
