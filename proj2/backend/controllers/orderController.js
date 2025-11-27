@@ -10,6 +10,10 @@ const currency = "usd";
 const deliveryCharge = 5;
 const frontend_URL = "http://localhost:5173";
 
+// ⭐ discount for claimed orders: 33% off (15 -> 10)
+// adjust this if you want a different discount
+const CLAIM_DISCOUNT_RATE = 1 / 3;
+
 // Status constants & FSM rules
 const STATUS = {
   PROCESSING: "Food Processing",
@@ -63,13 +67,6 @@ function canTransition(from, to) {
  * Cancels an order and moves it to Redistribute status
  * Only allows cancellation if order is in "Food Processing" or "Out for delivery" status
  * Queues a notification for redistribution if notification system is available
- * @param {Object} req - Express request object
- * @param {Object} req.body - Request body
- * @param {string} req.body.orderId - MongoDB _id of the order to cancel
- * @param {string} req.body.userId - MongoDB _id of the user cancelling the order
- * @param {Object} req.app - Express app object (for accessing notification queue)
- * @param {Object} res - Express response object
- * @returns {Promise<void>} Sends JSON response with success status and message
  */
 const cancelOrder = async (req, res) => {
   try {
@@ -113,15 +110,8 @@ const cancelOrder = async (req, res) => {
 };
 
 /**
- * Allows a user to claim a redistributed order
- * Transfers ownership of the order to the claiming user and sets status to "Food Processing"
- * Preserves the original user ID for tracking purposes
- * @param {Object} req - Express request object
- * @param {Object} req.body - Request body
- * @param {string} req.body.orderId - MongoDB _id of the order to claim
- * @param {string} req.body.userId - MongoDB _id of the user claiming the order
- * @param {Object} res - Express response object
- * @returns {Promise<void>} Sends JSON response with success status, message, and order data
+ * Allows a user to claim a redistributed order.
+ * Applies a discount, transfers ownership, and resets status to Food Processing.
  */
 const claimOrder = async (req, res) => {
   try {
@@ -137,20 +127,36 @@ const claimOrder = async (req, res) => {
         message: "Order not available for claim",
       });
 
+    // Ensure originalAmount exists for older orders
+    if (typeof order.originalAmount !== "number") {
+      order.originalAmount = order.amount;
+    }
+
     // If this is the first time, preserve who originally created it
     if (!order.originalUserId) {
       order.originalUserId = order.userId;
-      // original user name is whatever name was on the address at creation
       order.originalUserName =
-        order.address?.name || order.address?.fullName || "";
+        order.address?.name ||
+        order.address?.fullName ||
+        `${order.address?.firstName || ""} ${order.address?.lastName || ""}`.trim();
     }
 
     // Look up claimer's name for admin display
     const claimer = await userModel.findById(claimerId).select("name");
     const claimerName =
       claimer?.name ||
-      order.address?.name || // fallback if you later choose to overwrite address
-      "";
+      order.address?.name ||
+      order.address?.fullName ||
+      `${order.address?.firstName || ""} ${order.address?.lastName || ""}`.trim();
+
+    // ⭐ Apply discount to the order total for the claimer
+    // Example: 33% off  -> 15 -> 10
+    const discountedAmount = Math.round(
+      order.originalAmount * (1 - CLAIM_DISCOUNT_RATE)
+    );
+
+    // Just to be safe, don't go below 1
+    order.amount = Math.max(discountedAmount, 1);
 
     // transfer ownership
     order.userId = claimerId;
@@ -163,7 +169,7 @@ const claimOrder = async (req, res) => {
 
     res.json({
       success: true,
-      message: "Order claimed successfully; it is now in Food Processing.",
+      message: "Order claimed successfully at a discounted price.",
       data: order,
     });
   } catch (error) {
@@ -172,31 +178,29 @@ const claimOrder = async (req, res) => {
   }
 };
 
-
 /**
  * Places a new order with Stripe payment
  * Creates order record and clears user's cart
  * Returns Stripe checkout session URL for payment verification
- * @param {Object} req - Express request object
- * @param {Object} req.body - Request body
- * @param {string} req.body.userId - MongoDB _id of the user placing the order
- * @param {Array} req.body.items - Array of food items in the order
- * @param {number} req.body.amount - Total order amount
- * @param {Object} req.body.address - Delivery address object
- * @param {Object} res - Express response object
- * @returns {Promise<void>} Sends JSON response with success status and Stripe session URL
  */
 const placeOrder = async (req, res) => {
   try {
     const { userId, items, amount, address } = req.body;
+
+    const fullName = address?.firstName
+      ? `${address.firstName} ${address.lastName || ""}`.trim()
+      : address?.name || address?.fullName || "";
+
     const newOrder = new orderModel({
       userId,
       items,
       amount,
+      originalAmount: amount, // ⭐ base price stored here
       address,
       originalUserId: userId,
-      originalUserName: address?.name || address?.fullName || "", // depends on your address shape
+      originalUserName: fullName,
     });
+
     await newOrder.save();
     await userModel.findByIdAndUpdate(userId, { cartData: {} });
 
@@ -210,31 +214,29 @@ const placeOrder = async (req, res) => {
   }
 };
 
-
 /**
  * Places a new order with Cash on Delivery (COD) payment
  * Creates order record with payment marked as true and clears user's cart
- * @param {Object} req - Express request object
- * @param {Object} req.body - Request body
- * @param {string} req.body.userId - MongoDB _id of the user placing the order
- * @param {Array} req.body.items - Array of food items in the order
- * @param {number} req.body.amount - Total order amount
- * @param {Object} req.body.address - Delivery address object
- * @param {Object} res - Express response object
- * @returns {Promise<void>} Sends JSON response with success status and message
  */
 const placeOrderCod = async (req, res) => {
   try {
     const { userId, items, amount, address } = req.body;
+
+    const fullName = address?.firstName
+      ? `${address.firstName} ${address.lastName || ""}`.trim()
+      : address?.name || address?.fullName || "";
+
     const newOrder = new orderModel({
       userId,
       items,
       amount,
+      originalAmount: amount, // ⭐ base price stored here
       address,
       payment: true,
       originalUserId: userId,
-      originalUserName: address?.name || address?.fullName || "",
+      originalUserName: fullName,
     });
+
     await newOrder.save();
     await userModel.findByIdAndUpdate(userId, { cartData: {} });
     res.json({ success: true, message: "Order Placed" });
@@ -246,10 +248,6 @@ const placeOrderCod = async (req, res) => {
 
 /**
  * Retrieves all orders from the database
- * Returns orders sorted by date in descending order (newest first)
- * @param {Object} req - Express request object
- * @param {Object} res - Express response object
- * @returns {Promise<void>} Sends JSON response with success status and array of all orders
  */
 const listOrders = async (req, res) => {
   try {
@@ -264,12 +262,6 @@ const listOrders = async (req, res) => {
 /**
  * Retrieves all orders for a specific user
  * Includes both orders created by the user and orders claimed by the user
- * Returns orders sorted by date in descending order (newest first)
- * @param {Object} req - Express request object
- * @param {Object} req.body - Request body
- * @param {string} req.body.userId - MongoDB _id of the user
- * @param {Object} res - Express response object
- * @returns {Promise<void>} Sends JSON response with success status and array of user's orders
  */
 const userOrders = async (req, res) => {
   try {
@@ -287,14 +279,6 @@ const userOrders = async (req, res) => {
 
 /**
  * Updates the status of an order
- * Validates the status transition according to the order state machine rules
- * Only allows transitions defined in ALLOWED_TRANSITIONS
- * @param {Object} req - Express request object
- * @param {Object} req.body - Request body
- * @param {string} req.body.orderId - MongoDB _id of the order to update
- * @param {string} req.body.status - New status value (must be valid and transitionable)
- * @param {Object} res - Express response object
- * @returns {Promise<void>} Sends JSON response with success status, message, and updated order data
  */
 const updateStatus = async (req, res) => {
   try {
@@ -335,14 +319,6 @@ const updateStatus = async (req, res) => {
 
 /**
  * Verifies payment status after Stripe checkout
- * If payment successful, marks order as paid
- * If payment failed, deletes the order from database
- * @param {Object} req - Express request object
- * @param {Object} req.body - Request body
- * @param {string} req.body.orderId - MongoDB _id of the order to verify
- * @param {string} req.body.success - Payment status ("true" or "false")
- * @param {Object} res - Express response object
- * @returns {Promise<void>} Sends JSON response with success status and message
  */
 const verifyOrder = async (req, res) => {
   const { orderId, success } = req.body;
@@ -362,13 +338,6 @@ const verifyOrder = async (req, res) => {
 /**
  * Assigns a cancelled or redistributed order to a shelter
  * Changes order status to "Donated" and creates a reroute record
- * Only allows assignment if order is in "Redistribute" or "Cancelled" status
- * @param {Object} req - Express request object
- * @param {Object} req.body - Request body
- * @param {string} req.body.orderId - MongoDB _id of the order to assign
- * @param {string} req.body.shelterId - MongoDB _id of the shelter
- * @param {Object} res - Express response object
- * @returns {Promise<void>} Sends JSON response with success status, message, and order data
  */
 const assignShelter = async (req, res) => {
   try {
@@ -522,5 +491,5 @@ export {
   cancelOrder,
   assignShelter,
   claimOrder,
-  rateOrder, // 👈 NEW EXPORT
+  rateOrder,
 };
