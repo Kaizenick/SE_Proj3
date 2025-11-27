@@ -11,7 +11,6 @@ const deliveryCharge = 5;
 const frontend_URL = "http://localhost:5173";
 
 // ⭐ discount for claimed orders: 33% off (15 -> 10)
-// adjust this if you want a different discount
 const CLAIM_DISCOUNT_RATE = 1 / 3;
 
 // Status constants & FSM rules
@@ -53,14 +52,54 @@ const ALLOWED_TRANSITIONS = {
 
 /**
  * Checks if a status transition is allowed according to the order state machine
- * @param {string} from - Current order status
- * @param {string} to - Desired order status
- * @returns {boolean} True if transition is allowed, false otherwise
  */
 function canTransition(from, to) {
   if (from === to) return true;
   const nexts = ALLOWED_TRANSITIONS[from] || new Set();
   return nexts.has(to);
+}
+
+/**
+ * Try to infer whether an order is veg / non-veg / mixed.
+ * This looks at common flags on each item (isVeg / veg / category).
+ * If it cannot decide cleanly, it returns "mixed".
+ *
+ * Returns one of: "veg" | "nonveg" | "mixed"
+ */
+function getFoodCategoryFromOrder(order) {
+  let hasVeg = false;
+  let hasNonVeg = false;
+
+  for (const item of order.items || []) {
+    if (!item) continue;
+
+    // 1) direct boolean flags commonly used
+    let flag = null;
+    if (typeof item.isVeg === "boolean") {
+      flag = item.isVeg;
+    } else if (typeof item.veg === "boolean") {
+      flag = item.veg;
+    } else if (typeof item.isVegetarian === "boolean") {
+      flag = item.isVegetarian;
+    }
+
+    // 2) string category like "veg" / "non-veg"
+    if (flag === null && typeof item.category === "string") {
+      const cat = item.category.toLowerCase();
+      if (cat.includes("veg") && !cat.includes("non")) {
+        flag = true;
+      } else if (cat.includes("non-veg") || cat.includes("non veg")) {
+        flag = false;
+      }
+    }
+
+    if (flag === true) hasVeg = true;
+    else if (flag === false) hasNonVeg = true;
+  }
+
+  if (hasVeg && !hasNonVeg) return "veg";
+  if (hasNonVeg && !hasVeg) return "nonveg";
+  return "mixed";
 }
 
 /**
@@ -94,10 +133,13 @@ const cancelOrder = async (req, res) => {
 
     const queueNotification = req.app.get("queueNotification");
     if (typeof queueNotification === "function") {
+      const foodCategory = getFoodCategoryFromOrder(order); // "veg" | "nonveg" | "mixed"
+
       queueNotification({
         orderId,
         orderItems: order.items,
         cancelledByUserId: userId,
+        foodCategory,
         message: "Order cancelled by user; available for redistribution",
       });
     }
@@ -138,7 +180,9 @@ const claimOrder = async (req, res) => {
       order.originalUserName =
         order.address?.name ||
         order.address?.fullName ||
-        `${order.address?.firstName || ""} ${order.address?.lastName || ""}`.trim();
+        `${order.address?.firstName || ""} ${
+          order.address?.lastName || ""
+        }`.trim();
     }
 
     // Look up claimer's name for admin display
@@ -147,10 +191,11 @@ const claimOrder = async (req, res) => {
       claimer?.name ||
       order.address?.name ||
       order.address?.fullName ||
-      `${order.address?.firstName || ""} ${order.address?.lastName || ""}`.trim();
+      `${order.address?.firstName || ""} ${
+        order.address?.lastName || ""
+      }`.trim();
 
     // ⭐ Apply discount to the order total for the claimer
-    // Example: 33% off  -> 15 -> 10
     const discountedAmount = Math.round(
       order.originalAmount * (1 - CLAIM_DISCOUNT_RATE)
     );
