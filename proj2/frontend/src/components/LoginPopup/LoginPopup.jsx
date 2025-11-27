@@ -9,7 +9,7 @@ const LoginPopup = ({ setShowLogin }) => {
   const { setToken, url, loadCartData } = useContext(StoreContext);
   const [currState, setCurrState] = useState("Sign Up");
 
-  // ✅ existing form data + address fields
+  // ✅ form data + address + preferences
   const [data, setData] = useState({
     name: "",
     email: "",
@@ -17,6 +17,8 @@ const LoginPopup = ({ setShowLogin }) => {
     addressFormatted: "",
     addressLat: "",
     addressLng: "",
+    dietPreference: "any",      // "any" | "veg-only"
+    sugarPreference: "any",     // "any" | "no-sweets"
   });
 
   // ✅ for address suggestions
@@ -25,15 +27,14 @@ const LoginPopup = ({ setShowLogin }) => {
   const onChangeHandler = (event) => {
     const name = event.target.name;
     const value = event.target.value;
-    setData((data) => ({ ...data, [name]: value }));
+    setData((prev) => ({ ...prev, [name]: value }));
   };
 
   // ✅ handle address typing (free OpenStreetMap autocomplete)
   const handleAddressChange = async (e) => {
     const query = e.target.value;
-    setData({ ...data, addressFormatted: query });
+    setData((prev) => ({ ...prev, addressFormatted: query }));
 
-    // only query API if user typed at least 3 chars
     if (query.length < 3) {
       setSuggestions([]);
       return;
@@ -53,13 +54,13 @@ const LoginPopup = ({ setShowLogin }) => {
 
   // ✅ when a user selects a suggestion
   const handleSelectSuggestion = (place) => {
-    setData({
-      ...data,
+    setData((prev) => ({
+      ...prev,
       addressFormatted: place.display_name,
       addressLat: place.lat,
       addressLng: place.lon,
-    });
-    setSuggestions([]); // hide dropdown
+    }));
+    setSuggestions([]);
   };
 
   const onLogin = async (e) => {
@@ -72,9 +73,16 @@ const LoginPopup = ({ setShowLogin }) => {
       new_url += "/api/user/register";
     }
 
-    // ✅ only add address if we're signing up
-    let payload = { ...data };
-    if (currState === "Sign Up") {
+    let payload;
+
+    if (currState === "Login") {
+      // 🔹 Login: only email + password
+      payload = {
+        email: data.email,
+        password: data.password,
+      };
+    } else {
+      // 🔹 Sign Up: full payload including address + preferences
       payload = {
         name: data.name,
         email: data.email,
@@ -84,6 +92,8 @@ const LoginPopup = ({ setShowLogin }) => {
           lat: data.addressLat,
           lng: data.addressLng,
         },
+        dietPreference: data.dietPreference,       // ⭐ new
+        sugarPreference: data.sugarPreference,     // ⭐ new
       };
     }
 
@@ -127,7 +137,7 @@ const LoginPopup = ({ setShowLogin }) => {
                 required
               />
 
-              {/* ✅ Free OpenStreetMap autocomplete input */}
+              {/* ✅ Address input with suggestions */}
               <div style={{ position: "relative" }}>
                 <input
                   type="text"
@@ -137,7 +147,6 @@ const LoginPopup = ({ setShowLogin }) => {
                   required
                   autoComplete="off"
                 />
-                {/* Suggestions dropdown */}
                 {suggestions.length > 0 && (
                   <ul
                     style={{
@@ -169,6 +178,28 @@ const LoginPopup = ({ setShowLogin }) => {
                   </ul>
                 )}
               </div>
+
+              {/* ⭐ Diet preference select */}
+              <select
+                name="dietPreference"
+                value={data.dietPreference}
+                onChange={onChangeHandler}
+                className="login-pref-select"
+              >
+                <option value="any">No diet preference</option>
+                <option value="veg-only">Vegetarian only</option>
+              </select>
+
+              {/* ⭐ Sugar preference select */}
+              <select
+                name="sugarPreference"
+                value={data.sugarPreference}
+                onChange={onChangeHandler}
+                className="login-pref-select"
+              >
+                <option value="any">Okay with sweets / desserts</option>
+                <option value="no-sweets">Avoid sweets / desserts (sugar-free)</option>
+              </select>
             </>
           ) : null}
 
@@ -193,7 +224,7 @@ const LoginPopup = ({ setShowLogin }) => {
         <button>{currState === "Login" ? "Login" : "Create account"}</button>
 
         <div className="login-popup-condition">
-          <input type="checkbox" name="" id="" required />
+          <input type="checkbox" required />
           <p>By continuing, I agree to the terms of use & privacy policy.</p>
         </div>
 

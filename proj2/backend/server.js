@@ -74,50 +74,43 @@ function isVegOnlyOrder(orderItems = []) {
 }
 
 // sweet / dessert detection
+// ✅ treats anything in categories "Cake" / "Deserts" / "Desserts" as sweets
+//   + name-based safety net for things like Gelato, Baklava, Tiramisu, etc.
 function orderHasSweets(orderItems = []) {
   if (!Array.isArray(orderItems) || orderItems.length === 0) return false;
-
-  const sweetNameKeywords = [
-    "cake",
-    "tiramisu",
-    "dessert",
-    "brownie",
-    "ice cream",
-    "ice-cream",
-    "pastry",
-    "pudding",
-    "gulab",
-    "laddu",
-    "jalebi",
-    "sweet",
-  ];
-
-  const sweetCategoryKeywords = [
-    "dessert",
-    "desserts",
-    "cake",
-    "cakes",
-    "sweets",
-    "sweet",
-    "ice cream",
-    "ice-cream",
-    "pastry",
-  ];
 
   return orderItems.some((item) => {
     if (!item) return false;
 
-    const name = (item.name || "").toLowerCase();
-    const cat = (item.category || item.type || "").toLowerCase();
+    const catRaw = (
+      item.category ||
+      item.section ||
+      item.type ||
+      ""
+    )
+      .toString()
+      .toLowerCase();
 
-    const nameIsSweet = sweetNameKeywords.some((kw) =>
-      name.includes(kw)
-    );
-    const catIsSweet = sweetCategoryKeywords.some((kw) =>
-      cat.includes(kw)
+    const nameRaw = (item.name || "").toString().toLowerCase();
+
+    // Category-based: all items under Cake / Deserts / Desserts tabs
+    const categoryIsSweet = [
+      "cake",
+      "cakes",
+      "dessert",
+      "desserts",
+      "desert",
+      "deserts", // handles your tab label typo "Deserts"
+      "sweets",
+      "sweet",
+    ].some((k) => catRaw.includes(k));
+
+    // Name-based: fallback if category is missing / inconsistent
+    const nameLooksSweet = /cake|dessert|ice cream|ice-cream|gelato|baklava|tiramisu|pastry|pudding|sweet/i.test(
+      nameRaw
     );
 
-    return nameIsSweet || catIsSweet;
+    return categoryIsSweet || nameLooksSweet;
   });
 }
 

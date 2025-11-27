@@ -14,12 +14,6 @@ const createToken = (id) => {
 
 /**
  * Authenticates a user and returns a JWT token
- * @param {Object} req - Express request object
- * @param {Object} req.body - Request body
- * @param {string} req.body.email - User's email address
- * @param {string} req.body.password - User's plain text password
- * @param {Object} res - Express response object
- * @returns {Promise<void>} Sends JSON response with success status and token or error message
  */
 const loginUser = async (req, res) => {
   const { email, password } = req.body;
@@ -46,20 +40,18 @@ const loginUser = async (req, res) => {
 
 /**
  * Registers a new user account
- * @param {Object} req - Express request object
- * @param {Object} req.body - Request body
- * @param {string} req.body.name - User's full name
- * @param {string} req.body.email - User's email address
- * @param {string} req.body.password - User's plain text password (min 8 characters)
- * @param {Object} [req.body.address] - Optional address object
- * @param {string} [req.body.address.formatted] - Formatted address string
- * @param {number} [req.body.address.lat] - Latitude coordinate
- * @param {number} [req.body.address.lng] - Longitude coordinate
- * @param {Object} res - Express response object
- * @returns {Promise<void>} Sends JSON response with success status and token or error message
  */
 const registerUser = async (req, res) => {
-  const { name, email, password, address } = req.body;
+  const {
+    name,
+    email,
+    password,
+    address,
+    // ⭐ NEW: diet & sugar preferences from the signup form
+    dietPreference = "any",
+    sugarPreference = "any",
+  } = req.body;
+
   try {
     //check if user already exists
     const exists = await userModel.findOne({ email });
@@ -82,13 +74,15 @@ const registerUser = async (req, res) => {
     }
 
     // hashing user password
-    const salt = await bcrypt.genSalt(10); // the more no. round the more time it will take
+    const salt = await bcrypt.genSalt(10);
     const hashedPassword = await bcrypt.hash(password, salt);
 
     const newUser = new userModel({
       name,
       email,
       password: hashedPassword,
+      dietPreference,    // ⭐ store preference
+      sugarPreference,   // ⭐ store preference
       ...(address && {
         address: {
           formatted: address.formatted,
