@@ -16,6 +16,7 @@ const CLAIM_DISCOUNT_RATE = 1 / 3;
 // Status constants & FSM rules
 const STATUS = {
   PROCESSING: "Food Processing",
+  DRIVER_ASSIGNED: "Driver assigned",
   OUT_FOR_DELIVERY: "Out for delivery",
   DELIVERED: "Delivered",
   REDISTRIBUTE: "Redistribute",
@@ -35,11 +36,24 @@ const STATUS_VALUES = new Set(Object.values(STATUS));
  *  - Delivered         -> (terminal)
  */
 const ALLOWED_TRANSITIONS = {
-  [STATUS.PROCESSING]: new Set([STATUS.OUT_FOR_DELIVERY, STATUS.REDISTRIBUTE]),
+  // User just placed order → restaurant working on it
+  [STATUS.PROCESSING]: new Set([
+    STATUS.DRIVER_ASSIGNED,   // driver is chosen
+    STATUS.REDISTRIBUTE,      // order cancelled & goes to redistribute
+  ]),
+
+  // After driver assigned → either actually goes out or gets redistributed
+  [STATUS.DRIVER_ASSIGNED]: new Set([
+    STATUS.OUT_FOR_DELIVERY,
+    STATUS.REDISTRIBUTE,
+  ]),
+
+  // Once it’s out → can be delivered or redistributed
   [STATUS.OUT_FOR_DELIVERY]: new Set([
     STATUS.DELIVERED,
     STATUS.REDISTRIBUTE,
   ]),
+
   [STATUS.REDISTRIBUTE]: new Set([
     STATUS.PROCESSING,
     STATUS.CANCELLED,
@@ -528,13 +542,21 @@ const rateOrder = async (req, res) => {
 
 const driverAvailableOrders = async (req, res) => {
   try {
-    // Only show orders that have NOT been claimed by any driver yet
-    // and are in a deliverable state.
+    const driverId = req.body.userId; // set by authMiddleware
+
+    // Make sure this user is a driver
+    const driver = await userModel.findById(driverId);
+    if (!driver || !driver.isDriver) {
+      return res.json({
+        success: false,
+        message: "Only drivers can see available orders",
+      });
+    }
+
     const orders = await orderModel
       .find({
         $or: [{ driverId: { $exists: false } }, { driverId: null }],
-        // if you want to restrict it further you can do:
-        // status: STATUS.OUT_FOR_DELIVERY,
+        // optionally also filter by status, etc.
       })
       .sort({ date: -1 });
 
@@ -550,6 +572,7 @@ const driverAvailableOrders = async (req, res) => {
     });
   }
 };
+
 
 // List all orders claimed by the currently logged-in driver
 const driverMyOrders = async (req, res) => {
@@ -608,9 +631,8 @@ const driverClaimOrder = async (req, res) => {
 
     // Optionally, ensure status moves to "Out for delivery"
     // only if it isn't already there
-    if (order.status !== STATUS.OUT_FOR_DELIVERY) {
-      order.status = STATUS.OUT_FOR_DELIVERY;
-    }
+    order.status = STATUS.DRIVER_ASSIGNED;
+
 
     await order.save();
 
@@ -637,8 +659,6 @@ const driverClaimOrder = async (req, res) => {
     });
   }
 };
-
-
 
 export {
   placeOrder,

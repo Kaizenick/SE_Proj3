@@ -3,6 +3,7 @@ import axios from "axios";
 import { StoreContext } from "../Context/StoreContext";
 import { useNavigate } from "react-router-dom";
 import toast from "react-hot-toast";
+import "../styles/driver.css";
 
 const DriverRegister = () => {
   const { url } = useContext(StoreContext);
@@ -20,6 +21,7 @@ const DriverRegister = () => {
 
   const onSubmit = async (e) => {
     e.preventDefault();
+
     try {
       const res = await axios.post(`${url}/api/user/register-driver`, form);
       if (res.data.success) {
@@ -34,38 +36,64 @@ const DriverRegister = () => {
     }
   };
 
+  const goToLogin = () => {
+    navigate("/driver/login");
+  };
+
   return (
-    <div className="driver-auth-page" style={{ padding: "2rem" }}>
-      <h2>Driver Registration</h2>
-      <form
-        onSubmit={onSubmit}
-        style={{ display: "flex", flexDirection: "column", gap: "0.75rem" }}
-      >
-        <input
-          name="name"
-          placeholder="Full Name"
-          value={form.name}
-          onChange={onChange}
-          required
-        />
-        <input
-          name="email"
-          type="email"
-          placeholder="Email"
-          value={form.email}
-          onChange={onChange}
-          required
-        />
-        <input
-          name="password"
-          type="password"
-          placeholder="Password (min 8 chars)"
-          value={form.password}
-          onChange={onChange}
-          required
-        />
-        <button type="submit">Register as Driver</button>
-      </form>
+    <div className="driver-auth-wrapper">
+      <div className="driver-auth-card">
+        <div className="driver-auth-header">
+          <h2 className="driver-auth-title">Driver Registration</h2>
+          <p className="driver-auth-subtitle">
+            Create a driver account to start accepting delivery requests.
+          </p>
+        </div>
+
+        <form className="driver-auth-form" onSubmit={onSubmit}>
+          <input
+            name="name"
+            type="text"
+            placeholder="Full name"
+            value={form.name}
+            onChange={onChange}
+            required
+          />
+          <input
+            name="email"
+            type="email"
+            placeholder="Email address"
+            value={form.email}
+            onChange={onChange}
+            required
+          />
+          <input
+            name="password"
+            type="password"
+            placeholder="Password (min 8 characters)"
+            value={form.password}
+            onChange={onChange}
+            required
+          />
+
+          <button type="submit" className="driver-primary-btn">
+            Register as Driver
+          </button>
+        </form>
+
+        <div className="driver-auth-actions">
+          <span className="driver-auth-note">
+            Already have a driver account?
+          </span>
+          <button
+            type="button"
+            className="driver-secondary-btn"
+            onClick={goToLogin}
+          >
+            Login as Driver
+          </button>
+        </div>
+      </div>
     </div>
   );
 };

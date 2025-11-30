@@ -30,7 +30,7 @@ orderRouter.post("/assign-shelter", assignShelter);
 
 // NEW route – user rates a delivered order
 orderRouter.post("/rate", authMiddleware, rateOrder);
-orderRouter.get("/driver/available", driverAvailableOrders);
+orderRouter.get("/driver/available", authMiddleware, driverAvailableOrders);
 orderRouter.get("/driver/my", authMiddleware, driverMyOrders);
 orderRouter.post("/driver/claim", authMiddleware, driverClaimOrder);
 

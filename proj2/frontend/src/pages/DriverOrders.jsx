@@ -2,6 +2,7 @@ import { useContext, useEffect, useState } from "react";
 import axios from "axios";
 import { StoreContext } from "../Context/StoreContext";
 import toast from "react-hot-toast";
+import "../styles/driver.css";
 
 const DriverOrders = () => {
   const { url, token, currency } = useContext(StoreContext);
@@ -13,8 +14,12 @@ const DriverOrders = () => {
   const authHeader = token ? { headers: { token } } : {};
 
   const fetchAvailableOrders = async () => {
+    if (!token) return;
     try {
-      const res = await axios.get(`${url}/api/order/driver/available`);
+      const res = await axios.get(
+        `${url}/api/order/driver/available`,
+        authHeader
+      );
       if (res.data.success) {
         setAvailableOrders(res.data.data || []);
       } else {
@@ -28,10 +33,7 @@ const DriverOrders = () => {
   const fetchMyOrders = async () => {
     if (!token) return;
     try {
-      const res = await axios.get(
-        `${url}/api/order/driver/my`,
-        authHeader
-      );
+      const res = await axios.get(`${url}/api/order/driver/my`, authHeader);
       if (res.data.success) {
         setMyOrders(res.data.data || []);
       } else {
@@ -64,13 +66,7 @@ const DriverOrders = () => {
         toast.success("Order claimed!");
 
         const claimedOrder = res.data.data;
-
-        // Remove from available list
-        setAvailableOrders((prev) =>
-          prev.filter((o) => o._id !== orderId)
-        );
-
-        // Add to "My orders"
+        setAvailableOrders((prev) => prev.filter((o) => o._id !== orderId));
         setMyOrders((prev) => [claimedOrder, ...prev]);
       } else {
         toast.error(res.data.message || "Could not claim order");
@@ -81,9 +77,21 @@ const DriverOrders = () => {
     }
   };
 
+  // Map backend status string to CSS class
+  const getStatusClass = (statusRaw) => {
+    const status = (statusRaw || "").toLowerCase();
+    if (status.includes("driver assigned")) return "driver-assigned";
+    if (status.includes("out for delivery")) return "out-for-delivery";
+    if (status.includes("delivered")) return "delivered";
+    if (status.includes("redistribute")) return "redistribute";
+    if (status.includes("cancelled")) return "cancelled";
+    if (status.includes("donated")) return "donated";
+    return "processing";
+  };
+
   const renderOrderList = (orders, showClaimButton = false) => {
     if (!orders || orders.length === 0) {
-      return <p>No orders found.</p>;
+      return <p>No orders found in this list.</p>;
     }
 
     return (
@@ -91,56 +99,69 @@ const DriverOrders = () => {
         {orders.map((o) => (
           <li key={o._id} className="driver-order-card">
             <div>
-              <p>
-                <strong>Order ID:</strong> {o._id}
-              </p>
-              {typeof o.amount === "number" && (
-                <p>
-                  <strong>Total:</strong>{" "}
-                  {currency}
-                  {o.amount}
-                </p>
-              )}
-              {o.address && (
-                <p>
-                  <strong>Address:</strong>{" "}
-                  {o.address.formatted ||
-                    o.address.line1 ||
-                    o.address.fullName ||
-                    o.address.name}
-                </p>
-              )}
+              <div className="driver-order-header">
+                <div>
+                  <div className="driver-order-id">
+                    <strong>Order:</strong> {o._id}
+                  </div>
+                  {typeof o.amount === "number" && (
+                    <div className="driver-order-meta">
+                      <span>
+                        <strong>Total:</strong> {currency}
+                        {o.amount}
+                      </span>
+                    </div>
+                  )}
+                </div>
+
+                <span
+                  className={`driver-status-pill ${getStatusClass(o.status)}`}
+                >
+                  {o.status || "Food Processing"}
+                </span>
+              </div>
+
+              <div className="driver-order-meta">
+                {o.address && (
+                  <span>
+                    <strong>Address:</strong>{" "}
+                    {o.address.formatted ||
+                      o.address.line1 ||
+                      o.address.fullName ||
+                      o.address.name}
+                  </span>
+                )}
+
+                {o.driverName && (
+                  <span>
+                    <strong>Driver:</strong> {o.driverName}
+                  </span>
+                )}
+              </div>
 
               {Array.isArray(o.items) && o.items.length > 0 && (
                 <div>
-                  <strong>Items:</strong>
-                  <ul>
+                  <strong style={{ fontSize: "0.85rem" }}>Items:</strong>
+                  <ul className="driver-order-items">
                     {o.items.map((item, idx) => (
                       <li key={idx}>
-                        {item.name} x{item.quantity}
+                        {item.name} × {item.quantity || item.qty || 1}
                       </li>
                     ))}
                   </ul>
                 </div>
               )}
-
-              <p>
-                <strong>Status:</strong> {o.status}
-              </p>
-              {o.driverName && (
-                <p>
-                  <strong>Driver:</strong> {o.driverName}
-                </p>
-              )}
             </div>
 
             {showClaimButton && (
-              <button
-                className="claim-order-btn"
-                onClick={() => handleClaim(o._id)}
-              >
-                Claim this order
-              </button>
+              <div>
+                <button
+                  className="claim-order-btn"
+                  onClick={() => handleClaim(o._id)}
+                >
+                  Claim this order
+                </button>
+              </div>
             )}
           </li>
         ))}
@@ -149,18 +170,28 @@ const DriverOrders = () => {
   };
 
   return (
-    <div className="driver-orders-page">
-      <h2>Driver Dashboard</h2>
+    <div className="driver-page">
+      <div className="driver-header">
+        <h2>Driver Dashboard</h2>
+        <p>
+          View delivery opportunities, claim orders, and track the ones assigned
+          to you.
+        </p>
+      </div>
 
       <div className="driver-tabs">
         <button
-          className={activeTab === "available" ? "active" : ""}
+          className={`driver-tab-button ${
+            activeTab === "available" ? "active" : ""
+          }`}
           onClick={() => setActiveTab("available")}
         >
           Available orders
         </button>
         <button
-          className={activeTab === "mine" ? "active" : ""}
+          className={`driver-tab-button ${
+            activeTab === "mine" ? "active" : ""
+          }`}
           onClick={() => setActiveTab("mine")}
         >
           My orders

@@ -1,0 +1,253 @@
+/* General page wrappers */
+
+.driver-page {
+  max-width: 1100px;
+  margin: 2rem auto;
+  padding: 0 1rem;
+}
+
+.driver-header {
+  margin-bottom: 1.5rem;
+}
+
+.driver-header h2 {
+  font-size: 1.6rem;
+  margin: 0 0 0.25rem 0;
+}
+
+.driver-header p {
+  margin: 0;
+  font-size: 0.9rem;
+  color: #555;
+}
+
+/* Tabs */
+
+.driver-tabs {
+  display: inline-flex;
+  border-radius: 999px;
+  border: 1px solid #ddd;
+  overflow: hidden;
+  margin-bottom: 1rem;
+  background: #f9fafb;
+}
+
+.driver-tab-button {
+  border: none;
+  background: transparent;
+  padding: 0.45rem 1.2rem;
+  font-size: 0.9rem;
+  cursor: pointer;
+  color: #555;
+}
+
+.driver-tab-button.active {
+  background: #2563eb;
+  color: white;
+}
+
+/* Orders list */
+
+.driver-tab-content {
+  margin-top: 0.5rem;
+}
+
+.driver-order-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 0.75rem;
+}
+
+@media (min-width: 900px) {
+  .driver-order-list {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+.driver-order-card {
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  padding: 0.9rem 1rem;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.driver-order-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 0.5rem;
+}
+
+.driver-order-id {
+  font-size: 0.8rem;
+  color: #6b7280;
+  word-break: break-all;
+}
+
+/* Status pill */
+
+.driver-status-pill {
+  font-size: 0.7rem;
+  padding: 0.2rem 0.6rem;
+  border-radius: 999px;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  border: 1px solid #e5e7eb;
+  color: #374151;
+  background: #f9fafb;
+}
+
+.driver-status-pill.processing {
+  border-color: #38bdf8;
+  background: #eff6ff;
+}
+
+.driver-status-pill.driver-assigned {
+  border-color: #22c55e;
+  background: #ecfdf3;
+}
+
+.driver-status-pill.out-for-delivery {
+  border-color: #facc15;
+  background: #fefce8;
+}
+
+.driver-status-pill.delivered {
+  border-color: #22c55e;
+  background: #ecfdf3;
+}
+
+.driver-status-pill.redistribute,
+.driver-status-pill.cancelled {
+  border-color: #fb923c;
+  background: #fff7ed;
+}
+
+.driver-status-pill.donated {
+  border-color: #a855f7;
+  background: #faf5ff;
+}
+
+.driver-order-meta {
+  font-size: 0.85rem;
+  color: #374151;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.driver-order-meta strong {
+  font-weight: 600;
+}
+
+.driver-order-items {
+  margin-top: 0.3rem;
+  padding-left: 1rem;
+  color: #4b5563;
+  font-size: 0.8rem;
+}
+
+/* Buttons */
+
+.claim-order-btn,
+.driver-primary-btn,
+.driver-secondary-btn {
+  border-radius: 999px;
+  padding: 0.45rem 1.1rem;
+  font-size: 0.9rem;
+  font-weight: 500;
+  cursor: pointer;
+  border: 1px solid transparent;
+}
+
+.claim-order-btn,
+.driver-primary-btn {
+  background: #2563eb;
+  color: #ffffff;
+  border-color: #2563eb;
+}
+
+.claim-order-btn:hover,
+.driver-primary-btn:hover {
+  background: #1d4ed8;
+}
+
+.driver-secondary-btn {
+  background: #ffffff;
+  color: #374151;
+  border-color: #d1d5db;
+}
+
+.driver-secondary-btn:hover {
+  background: #f3f4f6;
+}
+
+/* Auth (register / login) */
+
+.driver-auth-wrapper {
+  max-width: 420px;
+  margin: 3rem auto;
+  padding: 0 1rem;
+}
+
+.driver-auth-card {
+  background: #ffffff;
+  border-radius: 10px;
+  border: 1px solid #e5e7eb;
+  padding: 1.8rem 1.9rem;
+}
+
+.driver-auth-header {
+  margin-bottom: 1.2rem;
+}
+
+.driver-auth-title {
+  font-size: 1.4rem;
+  font-weight: 600;
+  margin: 0 0 0.25rem 0;
+}
+
+.driver-auth-subtitle {
+  font-size: 0.9rem;
+  color: #6b7280;
+  margin: 0;
+}
+
+.driver-auth-form {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  margin-bottom: 1.1rem;
+}
+
+.driver-auth-form input {
+  border-radius: 6px;
+  padding: 0.5rem 0.65rem;
+  border: 1px solid #d1d5db;
+  font-size: 0.9rem;
+}
+
+.driver-auth-form input:focus {
+  outline: none;
+  border-color: #2563eb;
+  box-shadow: 0 0 0 1px rgba(37, 99, 235, 0.25);
+}
+
+.driver-auth-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 0.55rem;
+  margin-top: 0.5rem;
+}
+
+.driver-auth-note {
+  font-size: 0.8rem;
+  color: #6b7280;
+}

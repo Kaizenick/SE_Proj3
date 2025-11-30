@@ -15,6 +15,7 @@ import { Toaster } from "react-hot-toast";
 import DriverRegister from "./pages/DriverRegister.jsx";
 import DriverLogin from "./pages/DriverLogin.jsx";
 import DriverOrders from "./pages/DriverOrders.jsx";
+import ProtectedRoute from "./components/ProtectedRoute"; 
 
 const App = () => {
   const [showLogin, setShowLogin] = useState(false);
@@ -35,7 +36,7 @@ const App = () => {
           <Route path="/verify" element={<Verify />} />
           <Route path="/driver/register" element={<DriverRegister />} />
           <Route path="/driver/login" element={<DriverLogin />} />
-          <Route path="/driver/orders" element={<DriverOrders />} />
+          <Route path="/driver/orders" element={<ProtectedRoute><DriverOrders /></ProtectedRoute>}/>
         </Routes>
       </div>
       <Footer />

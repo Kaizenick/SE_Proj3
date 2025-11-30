@@ -2,6 +2,7 @@ import mongoose from "mongoose";
 
 const STATUS_VALUES = [
   "Food Processing",
+  "Driver assigned",
   "Out for delivery",
   "Delivered",
   "Redistribute",
