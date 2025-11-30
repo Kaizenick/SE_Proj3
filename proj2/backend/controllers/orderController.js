@@ -528,8 +528,15 @@ const rateOrder = async (req, res) => {
 
 const driverAvailableOrders = async (req, res) => {
   try {
-    // Simple version: give all orders, newest first
-    const orders = await orderModel.find({}).sort({ date: -1 });
+    // Only show orders that have NOT been claimed by any driver yet
+    // and are in a deliverable state.
+    const orders = await orderModel
+      .find({
+        $or: [{ driverId: { $exists: false } }, { driverId: null }],
+        // if you want to restrict it further you can do:
+        // status: STATUS.OUT_FOR_DELIVERY,
+      })
+      .sort({ date: -1 });
 
     return res.json({
       success: true,
@@ -544,6 +551,95 @@ const driverAvailableOrders = async (req, res) => {
   }
 };
 
+// List all orders claimed by the currently logged-in driver
+const driverMyOrders = async (req, res) => {
+  try {
+    const driverId = req.body.userId; // set by authMiddleware
+
+    const orders = await orderModel
+      .find({ driverId })
+      .sort({ date: -1 });
+
+    return res.json({
+      success: true,
+      data: orders,
+    });
+  } catch (error) {
+    console.error("driverMyOrders error:", error);
+    return res.json({
+      success: false,
+      message: "Error fetching driver orders",
+    });
+  }
+};
+
+// Driver claims an order to deliver
+const driverClaimOrder = async (req, res) => {
+  try {
+    const { orderId } = req.body;
+    const driverId = req.body.userId; // from authMiddleware
+
+    // Make sure this user is actually a driver
+    const driver = await userModel.findById(driverId);
+    if (!driver || !driver.isDriver) {
+      return res.json({
+        success: false,
+        message: "Only drivers can claim orders",
+      });
+    }
+
+    const order = await orderModel.findById(orderId);
+    if (!order) {
+      return res.json({ success: false, message: "Order not found" });
+    }
+
+    // If someone already claimed it, don't let this driver take it
+    if (order.driverId && order.driverId !== driverId) {
+      return res.json({
+        success: false,
+        message: "Order already claimed by another driver",
+      });
+    }
+
+    // Assign driver
+    order.driverId = driverId;
+    order.driverName = driver.name;
+    order.driverAssignedAt = new Date();
+
+    // Optionally, ensure status moves to "Out for delivery"
+    // only if it isn't already there
+    if (order.status !== STATUS.OUT_FOR_DELIVERY) {
+      order.status = STATUS.OUT_FOR_DELIVERY;
+    }
+
+    await order.save();
+
+    // Optional: notify other clients via Socket.IO so they can remove it live
+    const io = req.app.get("socketio");
+    if (io) {
+      io.emit("driver-order-claimed", {
+        orderId: order._id.toString(),
+        driverId,
+        driverName: driver.name,
+      });
+    }
+
+    return res.json({
+      success: true,
+      message: "Order claimed successfully",
+      data: order,
+    });
+  } catch (error) {
+    console.error("driverClaimOrder error:", error);
+    return res.json({
+      success: false,
+      message: "Error while claiming order",
+    });
+  }
+};
+
+
+
 export {
   placeOrder,
   listOrders,
@@ -556,4 +652,6 @@ export {
   claimOrder,
   rateOrder,
   driverAvailableOrders,
+  driverMyOrders,
+  driverClaimOrder,
 };
