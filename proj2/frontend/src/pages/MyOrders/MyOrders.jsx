@@ -127,24 +127,25 @@ const MyOrders = () => {
           }
 
           // 🔹 price & discount logic
-          const currentAmount =
+          const rawAmount =
             typeof order.amount === "number" ? order.amount : 0;
 
           const originalAmount =
             typeof order.originalAmount === "number"
               ? order.originalAmount
-              : currentAmount;
+              : rawAmount;
 
           // claimed order = current owner != original user
           const isClaimedOrder =
             order.originalUserId &&
             order.originalUserId.toString() !== order.userId.toString();
 
-          const hasDiscount =
-            isClaimedOrder && originalAmount > currentAmount;
+          // For claimed orders in our UX, the claimer pays nothing
+          const displayPaid = isClaimedOrder ? 0 : rawAmount;
 
+          const hasDiscount = originalAmount > displayPaid;
           const savings = hasDiscount
-            ? Math.max(originalAmount - currentAmount, 0)
+            ? Math.max(originalAmount - displayPaid, 0)
             : 0;
 
           return (
@@ -178,10 +179,11 @@ const MyOrders = () => {
                     </span>
 
                     <span className="price-paid">
-                      You paid:{" "}
+                      {isClaimedOrder ? "You got it for: " : "You paid: "}
                       <strong>
-                        {currency}
-                        {currentAmount.toFixed(2)}
+                        {isClaimedOrder
+                          ? "FREE"
+                          : `${currency}${displayPaid.toFixed(2)}`}
                       </strong>
                     </span>
 
@@ -195,8 +197,9 @@ const MyOrders = () => {
                   </>
                 ) : (
                   <span className="price-main">
-                    {currency}
-                    {currentAmount.toFixed(2)}
+                    {isClaimedOrder
+                      ? "FREE"
+                      : `${currency}${displayPaid.toFixed(2)}`}
                   </span>
                 )}
               </p>
@@ -241,19 +244,17 @@ const MyOrders = () => {
               )}
 
               {/* Rating UI for delivered orders */}
-              {!isCancelled &&
-                isDeliveredStatus &&
-                !order.rating && (
-                  <button
-                    className="rate-order-btn"
-                    onClick={() => {
-                      setSelectedOrderForRating(order);
-                      setShowRatingModal(true);
-                    }}
-                  >
-                    Rate order
-                  </button>
-                )}
+              {!isCancelled && isDeliveredStatus && !order.rating && (
+                <button
+                  className="rate-order-btn"
+                  onClick={() => {
+                    setSelectedOrderForRating(order);
+                    setShowRatingModal(true);
+                  }}
+                >
+                  Rate order
+                </button>
+              )}
 
               {!isCancelled && isDeliveredStatus && order.rating && (
                 <div className="order-rating-display">
