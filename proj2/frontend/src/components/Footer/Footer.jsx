@@ -9,10 +9,7 @@ const Footer = () => {
         <div className="footer-content-left">
           <img src={assets.logo} alt="" />
           <p>
-            Lorem Ipsum is simply dummy text of the printing and typesetting
-            industry. Lorem Ipsum has been the industry's standard dummy text
-            ever since the 1500s, when an unknown printer took a galley of type
-            and scrambled it to make a type specimen book.
+            Turn leftover food into fresh opportunities. ByteBite connects nearby restaurants, students and shelters so cancelled or surplus meals are claimed instead of wasted — often at heavily discounted or zero cost. Eat better, spend less, and help reduce food waste with every bite.
           </p>
           <div className="footer-social-icons">
             <img src={assets.facebook_icon} alt="" />
@@ -39,7 +36,7 @@ const Footer = () => {
       </div>
       <hr />
       <p className="footer-copyright">
-        Copyright 2024 © bytebite.com - All Right Reserved.
+        Copyright 2025 © bytebite.com - All Right Reserved.
       </p>
     </div>
   );
