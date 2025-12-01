@@ -7,8 +7,7 @@ import { ThemeContext } from "../../Context/ThemeContext";
 
 const Navbar = ({ setShowLogin }) => {
   const [menu, setMenu] = useState("home");
-  const { getTotalCartAmount, token, setToken, cartItems } =
-    useContext(StoreContext);
+  const { getTotalCartAmount, token, setToken } = useContext(StoreContext);
   const navigate = useNavigate();
   const { theme, toggleTheme } = useContext(ThemeContext);
 
@@ -90,6 +89,12 @@ const Navbar = ({ setShowLogin }) => {
           <div className="navbar-profile">
             <img src={assets.profile_icon} alt="Profile" />
             <ul className="navbar-profile-dropdown">
+              {/* ⭐ New Profile link */}
+              <li onClick={() => navigate("/profile")}>
+                <img src={assets.profile_icon} alt="Profile" />
+                <p>Profile</p>
+              </li>
+              <hr />
               <li onClick={() => navigate("/myorders")}>
                 <img src={assets.bag_icon} alt="Orders" /> <p>Orders</p>
               </li>

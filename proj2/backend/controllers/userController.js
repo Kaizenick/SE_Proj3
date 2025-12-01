@@ -47,7 +47,6 @@ const registerUser = async (req, res) => {
     email,
     password,
     address,
-    // ⭐ NEW: diet & sugar preferences from the signup form
     dietPreference = "any",
     sugarPreference = "any",
   } = req.body;
@@ -81,8 +80,8 @@ const registerUser = async (req, res) => {
       name,
       email,
       password: hashedPassword,
-      dietPreference,    // ⭐ store preference
-      sugarPreference,   // ⭐ store preference
+      dietPreference,
+      sugarPreference, 
       ...(address && {
         address: {
           formatted: address.formatted,
@@ -98,6 +97,81 @@ const registerUser = async (req, res) => {
   } catch (error) {
     console.log(error);
     res.json({ success: false, message: "Error" });
+  }
+};
+
+const getProfile = async (req, res) => {
+  try {
+    const userId = req.body.userId;
+
+    if (!userId) {
+      return res.json({ success: false, message: "User not authenticated" });
+    }
+
+    const user = await userModel
+      .findById(userId)
+      .select("name email address dietPreference sugarPreference");
+
+    if (!user) {
+      return res.json({ success: false, message: "User not found" });
+    }
+
+    res.json({ success: true, data: user });
+  } catch (error) {
+    console.error("getProfile error:", error);
+    res.json({ success: false, message: "Error fetching profile" });
+  }
+};
+
+/**
+ * ✅ Update only diet + sugar preferences
+ * Requires auth middleware to set req.body.userId from token.
+ */
+const updatePreferences = async (req, res) => {
+  try {
+    const userId = req.body.userId;
+    let { dietPreference, sugarPreference } = req.body;
+
+    if (!userId) {
+      return res.json({ success: false, message: "User not authenticated" });
+    }
+
+    const allowedDiet = ["any", "veg-only"];
+    const allowedSugar = ["any", "no-sweets"];
+
+    if (!allowedDiet.includes(dietPreference)) {
+      dietPreference = "any";
+    }
+    if (!allowedSugar.includes(sugarPreference)) {
+      sugarPreference = "any";
+    }
+
+    const updated = await userModel
+      .findByIdAndUpdate(
+        userId,
+        {
+          dietPreference,
+          sugarPreference,
+        },
+        { new: true }
+      )
+      .select("name email address dietPreference sugarPreference");
+
+    if (!updated) {
+      return res.json({ success: false, message: "User not found" });
+    }
+
+    res.json({
+      success: true,
+      message: "Preferences updated successfully",
+      data: updated,
+    });
+  } catch (error) {
+    console.error("updatePreferences error:", error);
+    res.json({
+      success: false,
+      message: "Error updating preferences",
+    });
   }
 };
 
@@ -182,4 +256,4 @@ export const loginDriver = async (req, res) => {
   }
 };
 
-export { loginUser, registerUser };
+export { loginUser, registerUser, getProfile, updatePreferences };

@@ -1,9 +1,11 @@
 import express from "express";
-import { loginUser, registerUser,registerDriver,loginDriver, } from "../controllers/userController.js";
+import { loginUser, registerUser,getProfile,updatePreferences,registerDriver,loginDriver, } from "../controllers/userController.js";
 const userRouter = express.Router();
-
+import authMiddleware from "../middleware/auth.js";
 userRouter.post("/register", registerUser);
 userRouter.post("/login", loginUser);
+userRouter.post("/profile", authMiddleware, getProfile);
+userRouter.post("/preferences", authMiddleware, updatePreferences);
 userRouter.post("/register-driver", registerDriver);
 userRouter.post("/login-driver", loginDriver);
 export default userRouter;
