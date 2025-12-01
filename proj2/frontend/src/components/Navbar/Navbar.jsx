@@ -7,7 +7,13 @@ import { ThemeContext } from "../../Context/ThemeContext";
 
 const Navbar = ({ setShowLogin }) => {
   const [menu, setMenu] = useState("home");
-  const { getTotalCartAmount, token, setToken } = useContext(StoreContext);
+  const {
+    getTotalCartAmount,
+    token,
+    setToken,
+    searchTerm,
+    setSearchTerm,
+  } = useContext(StoreContext);
   const navigate = useNavigate();
   const { theme, toggleTheme } = useContext(ThemeContext);
 
@@ -17,10 +23,33 @@ const Navbar = ({ setShowLogin }) => {
     navigate("/");
   };
 
+  // 🔍 update search text in global context
+  const handleSearchChange = (e) => {
+    setSearchTerm(e.target.value);
+  };
+
+  // 🔍 on submit: go to home & scroll to food list
+  const handleSearchSubmit = (e) => {
+    e.preventDefault();
+    navigate("/"); // make sure we're on home
+
+    setTimeout(() => {
+      const el = document.getElementById("food-display");
+      if (el) {
+        el.scrollIntoView({ behavior: "smooth", block: "start" });
+      }
+    }, 0);
+  };
+
   return (
     <div className={`navbar ${theme}`}>
       {/* Logo */}
-      <Link to="/">
+      <Link
+        to="/"
+        onClick={() => {
+          setMenu("home");
+        }}
+      >
         <img className="logo" src={assets.logo} alt="ByteBite Logo" />
       </Link>
 
@@ -58,7 +87,18 @@ const Navbar = ({ setShowLogin }) => {
 
       {/* Right Section */}
       <div className="navbar-right">
-        <img src={assets.search_icon} alt="Search" />
+        {/* 🔍 Search bar */}
+        <form className="navbar-search" onSubmit={handleSearchSubmit}>
+          <input
+            type="text"
+            placeholder="Search dishes or cuisines..."
+            value={searchTerm}
+            onChange={handleSearchChange}
+          />
+          <button type="submit" className="navbar-search-btn">
+            <img src={assets.search_icon} alt="Search" />
+          </button>
+        </form>
 
         {/* Cart */}
         <Link to="/cart" className="navbar-search-icon">
@@ -89,16 +129,18 @@ const Navbar = ({ setShowLogin }) => {
           <div className="navbar-profile">
             <img src={assets.profile_icon} alt="Profile" />
             <ul className="navbar-profile-dropdown">
-              {/* ⭐ New Profile link */}
+              {/* Profile */}
               <li onClick={() => navigate("/profile")}>
                 <img src={assets.profile_icon} alt="Profile" />
                 <p>Profile</p>
               </li>
               <hr />
+              {/* Orders */}
               <li onClick={() => navigate("/myorders")}>
                 <img src={assets.bag_icon} alt="Orders" /> <p>Orders</p>
               </li>
               <hr />
+              {/* Logout */}
               <li onClick={logout}>
                 <img src={assets.logout_icon} alt="Logout" /> <p>Logout</p>
               </li>

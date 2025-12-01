@@ -1,6 +1,7 @@
 import { createContext, useEffect, useState } from "react";
 import { food_list, menu_list } from "../assets/assets";
 import axios from "axios";
+
 export const StoreContext = createContext(null);
 
 /**
@@ -17,6 +18,9 @@ const StoreContextProvider = (props) => {
   const [token, setToken] = useState(localStorage.getItem("token") || "");
   const currency = "$";
   const deliveryCharge = 5;
+
+  // 🔍 global search term for filtering dishes
+  const [searchTerm, setSearchTerm] = useState("");
 
   /**
    * Adds an item to the cart or increments its quantity
@@ -122,6 +126,9 @@ const StoreContextProvider = (props) => {
     setCartItems,
     currency,
     deliveryCharge,
+    // 🔍 search
+    searchTerm,
+    setSearchTerm,
   };
 
   return (

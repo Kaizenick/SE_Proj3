@@ -12,3 +12,20 @@
     gap: 30px;
     row-gap: 50px;
 }
+.food-display-subtitle {
+  margin-top: 4px;
+  margin-bottom: 16px;
+  font-size: 0.9rem;
+  color: #777;
+}
+
+.food-display-subtitle .highlight {
+  font-weight: 600;
+  color: #ff4c24;
+}
+
+.food-display-empty {
+  padding: 24px 0;
+  color: #777;
+  font-size: 0.95rem;
+}
