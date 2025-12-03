@@ -92,14 +92,39 @@ const StoreContextProvider = (props) => {
    * @param {string} token.token - JWT authentication token
    * @returns {Promise<void>}
    */
-  const loadCartData = async (token) => {
+  /*const loadCartData = async (token) => {
     const response = await axios.post(
       url + "/api/cart/get",
       {},
       { headers: token }
     );
     setCartItems(response.data.cartData);
-  };
+  };*/
+
+  const loadCartData = async (token) => {
+  try {
+    const response = await axios.post(
+      url + "/api/cart/get",
+      {},
+      { headers: token }
+    );
+
+    if (response.data?.success && response.data.cartData) {
+      setCartItems(response.data.cartData);
+    } else {
+      // If token is invalid or no cart data, reset cart & token
+      setCartItems({});
+      localStorage.removeItem("token");
+      setToken("");
+    }
+  } catch (err) {
+    console.error("Failed to load cart:", err);
+    setCartItems({});
+    localStorage.removeItem("token");
+    setToken("");
+  }
+};
+
 
   useEffect(() => {
     async function loadData() {
