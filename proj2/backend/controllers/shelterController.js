@@ -1,4 +1,6 @@
 import shelterModel from "../models/shelterModel.js";
+import bcrypt from "bcryptjs";
+
 
 /**
  * Seeds the database with preset shelter data if the collection is empty
@@ -14,12 +16,16 @@ export const seedShelters = async (_req, res) => {
       return res.json({ success: true, message: "Shelters already exist" });
     }
 
+    const plainPassword = "shelter123";
+    const hashed = await bcrypt.hash(plainPassword, 10);
+
     const seed = [
       {
         name: "City Shelter – Raleigh",
         contactName: "John Smith",
         contactPhone: "+1 919 555 0111",
         contactEmail: "john.smith@cityshelter.org",
+        password: hashed,
         capacity: 200,
         address: {
           street: "101 Main St",
@@ -33,6 +39,7 @@ export const seedShelters = async (_req, res) => {
         contactName: "Lisa Green",
         contactPhone: "+1 919 555 0112",
         contactEmail: "lisa.green@trianglefb.org",
+        password: hashed,
         capacity: 150,
         address: {
           street: "22 Triangle Way",
@@ -46,6 +53,7 @@ export const seedShelters = async (_req, res) => {
         contactName: "Mark Lee",
         contactPhone: "+1 919 555 0113",
         contactEmail: "mark.lee@cocenter.org",
+        password: hashed,
         capacity: 100,
         address: {
           street: "400 Elm Ave",
@@ -59,6 +67,7 @@ export const seedShelters = async (_req, res) => {
         contactName: "Angela Torres",
         contactPhone: "+1 919 555 0114",
         contactEmail: "angela.torres@wake-relief.org",
+        password: hashed,
         capacity: 180,
         address: {
           street: "75 Oak Blvd",
@@ -72,6 +81,7 @@ export const seedShelters = async (_req, res) => {
         contactName: "Calvin Brooks",
         contactPhone: "+1 984 555 0115",
         contactEmail: "calvin.brooks@helpinghands.org",
+        password: hashed,
         capacity: 130,
         address: {
           street: "19 Ninth St",
@@ -85,6 +95,7 @@ export const seedShelters = async (_req, res) => {
         contactName: "Priya Shah",
         contactPhone: "+1 919 555 0116",
         contactEmail: "priya.shah@chpantry.org",
+        password: hashed,
         capacity: 120,
         address: {
           street: "8 Franklin St",
@@ -98,6 +109,7 @@ export const seedShelters = async (_req, res) => {
         contactName: "Evan Clark",
         contactPhone: "+1 919 555 0117",
         contactEmail: "evan.clark@garnerhope.org",
+        password: hashed,
         capacity: 90,
         address: {
           street: "210 Meadow Rd",
@@ -111,6 +123,7 @@ export const seedShelters = async (_req, res) => {
         contactName: "Sarah Nguyen",
         contactPhone: "+1 919 555 0118",
         contactEmail: "sarah.nguyen@mfs.org",
+        password: hashed,
         capacity: 110,
         address: {
           street: "310 Park Center Dr",
@@ -122,7 +135,7 @@ export const seedShelters = async (_req, res) => {
     ];
 
     await shelterModel.insertMany(seed);
-    res.json({ success: true, message: "Shelters seeded", count: seed.length });
+    res.json({ success: true, message: "Shelters seeded", count: seed.length, defaultPassword: plainPassword});
   } catch (e) {
     console.log(e);
     res.json({ success: false, message: "Error seeding shelters" });
