@@ -443,13 +443,25 @@ const assignShelter = async (req, res) => {
 
     await order.save();
 
+    const shelterAddressLine = shelter.address
+  ? [
+      shelter.address.street,
+      shelter.address.city,
+      shelter.address.state,
+      shelter.address.zipcode,
+      shelter.address.country,
+    ]
+      .filter(Boolean)
+      .join(", ")
+  : "";
+
     await rerouteModel.create({
       orderId: order._id,
       restaurantId: order.restaurantId ?? undefined,
       restaurantName: order.restaurantName ?? undefined,
       shelterId: shelter._id,
       shelterName: shelter.name,
-      shelterAddress: shelter.address,
+      shelterAddress: shelterAddressLine,
       shelterContactEmail: shelter.contactEmail,
       shelterContactPhone: shelter.contactPhone,
       items: (order.items || []).map((it) => ({
@@ -458,6 +470,7 @@ const assignShelter = async (req, res) => {
         price: it.price,
       })),
       total: order.amount ?? order.total,
+      status: "pending",
     });
 
     return res.json({

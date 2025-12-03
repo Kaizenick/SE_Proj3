@@ -52,11 +52,15 @@ const Shelters = () => {
 
         // Show only cancelled orders for this restaurant.
         const cancelledForRestaurant = allOrders.filter((o) => {
-          const isCancelled = o.status === "Cancelled";
+          //const isCancelled = o.status === "Cancelled";
+          const isRedistributable =
+             o.status === "Cancelled" || o.status === "Redistribute";
+
           const sameRestaurant = !currentRestaurantId
             ? true
             : o.restaurantId === currentRestaurantId;
-          return isCancelled && sameRestaurant;
+          //return isCancelled && sameRestaurant;
+          return isRedistributable && sameRestaurant;
         });
 
         setCancelledOrders(cancelledForRestaurant);
