@@ -1,0 +1,74 @@
+/* Fullscreen center layout */
+.login-wrapper {
+  height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #fffdf9;
+}
+
+/* Card */
+.login-box {
+  width: 380px;
+  background: #ffffff;
+  padding: 34px;
+  border-radius: 16px;
+  box-shadow: 0 8px 24px rgba(120, 60, 0, 0.12);
+  text-align: center;
+}
+
+/* Logo */
+.login-logo {
+  width: 160px;
+  margin-bottom: 10px;
+}
+
+/* Title */
+.login-box h2 {
+  margin-bottom: 20px;
+  font-size: 22px;
+  font-weight: 700;
+  color: #333;
+}
+
+/* Labels */
+.login-box label {
+  display: block;
+  text-align: left;
+  margin-top: 12px;
+  margin-bottom: 6px;
+  font-size: 14px;
+  font-weight: 500;
+  color: #555;
+}
+
+/* Inputs */
+.login-box input {
+  width: 100%;
+  padding: 10px 12px;
+  border-radius: 8px;
+  border: 1px solid #e5e5e5;
+  background: #fafafa;
+  outline: none;
+  font-size: 14px;
+  transition: border 0.2s;
+}
+
+.login-box input:focus {
+  border-color: #ff7e00;
+}
+
+/* Login button */
+.login-btn {
+  width: 100%;
+  margin-top: 20px;
+  background: #ff7e00 !important;
+  padding: 12px 0;
+  border-radius: 8px;
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.login-btn:hover {
+  background: #cc6400 !important;
+}
