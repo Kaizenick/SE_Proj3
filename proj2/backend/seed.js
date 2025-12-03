@@ -1,23 +1,17 @@
 // seed.js
 // Run with:  node seed.js
-// Make sure: MONGODB_URI in .env points to your local DB
 
 import mongoose from "mongoose";
 import dotenv from "dotenv";
 
-// TODO: adjust these imports to match your actual model filenames
-// Example: if you have models/foodModel.js with `export default mongoose.model("Food", foodSchema);`
-// then:  import Food from "./models/foodModel.js";
-import Food from "./models/foodModel.js";      // <-- change filename/name if needed
-import Shelter from "./models/shelterModel.js"; // <-- change if needed
+import Food from "./models/foodModel.js";
+import Shelter from "./models/shelterModel.js";
 
 dotenv.config();
 
-// const MONGO_URI =
-//   process.env.MONGODB_URI || "mongodb://127.0.0.1:27018/food-del";
+const MONGO_URI = "mongodb://127.0.0.1:27018/food-del";
 
-  const MONGO_URI = "mongodb://127.0.0.1:27018/food-del";
-
+// ------------------ FOOD ITEMS ------------------
 const foodItems = [
   {
     name: "Margherita Pizza",
@@ -71,41 +65,148 @@ const foodItems = [
   },
 ];
 
+// ------------------ SHELTERS WITH LOGIN FIELDS ------------------
 const shelters = [
   {
-    name: "Downtown Community Shelter",
-    address: "123 Main St, Raleigh, NC 27606",
-    contactName: "John Doe",
-    contactPhone: "9195550101",
-    capacity: 80,
+    name: "City Shelter – Raleigh",
+    contactEmail: "john.smith@cityshelter.org",
+    password: "shelter123",   // Will be hashed by pre-save middleware
+    contactName: "John Smith",
+    contactPhone: "+1 919 555 0111",
+    capacity: 200,
+    address: {
+      street: "101 Main St",
+      city: "Raleigh",
+      state: "NC",
+      zipcode: "27601",
+    },
   },
   {
-    name: "Hope Haven Shelter",
-    address: "42 Oakwood Ave, Raleigh, NC 27603",
-    contactName: "Jane Smith",
-    contactPhone: "9195550115",
-    capacity: 50,
+    name: "Triangle Food Bank",
+    contactEmail: "lisa.green@trianglefb.org",
+    password: "shelter123",
+    contactName: "Lisa Green",
+    contactPhone: "+1 919 555 0112",
+    capacity: 150,
+    address: {
+      street: "22 Triangle Way",
+      city: "Raleigh",
+      state: "NC",
+      zipcode: "27606",
+    },
+  },
+  {
+    name: "Community Outreach Center",
+    contactEmail: "mark.lee@cocenter.org",
+    password: "shelter123",
+    contactName: "Mark Lee",
+    contactPhone: "+1 919 555 0113",
+    capacity: 100,
+    address: {
+      street: "400 Elm Ave",
+      city: "Raleigh",
+      state: "NC",
+      zipcode: "27607",
+    },
+  },
+  {
+    name: "Wake County Relief Shelter",
+    contactEmail: "angela.torres@wake-relief.org",
+    password: "shelter123",
+    contactName: "Angela Torres",
+    contactPhone: "+1 919 555 0114",
+    capacity: 180,
+    address: {
+      street: "75 Oak Blvd",
+      city: "Cary",
+      state: "NC",
+      zipcode: "27513",
+    },
+  },
+  {
+    name: "Durham Helping Hands",
+    contactEmail: "calvin.brooks@helpinghands.org",
+    password: "shelter123",
+    contactName: "Calvin Brooks",
+    contactPhone: "+1 984 555 0115",
+    capacity: 130,
+    address: {
+      street: "19 Ninth St",
+      city: "Durham",
+      state: "NC",
+      zipcode: "27701",
+    },
+  },
+  {
+    name: "Chapel Hill Community Pantry",
+    contactEmail: "priya.shah@chpantry.org",
+    password: "shelter123",
+    contactName: "Priya Shah",
+    contactPhone: "+1 919 555 0116",
+    capacity: 120,
+    address: {
+      street: "8 Franklin St",
+      city: "Chapel Hill",
+      state: "NC",
+      zipcode: "27514",
+    },
+  },
+  {
+    name: "Garner Hope Center",
+    contactEmail: "evan.clark@garnerhope.org",
+    password: "shelter123",
+    contactName: "Evan Clark",
+    contactPhone: "+1 919 555 0117",
+    capacity: 90,
+    address: {
+      street: "210 Meadow Rd",
+      city: "Garner",
+      state: "NC",
+      zipcode: "27529",
+    },
+  },
+  {
+    name: "Morrisville Food & Shelter",
+    contactEmail: "sarah.nguyen@mfs.org",
+    password: "shelter123",
+    contactName: "Sarah Nguyen",
+    contactPhone: "+1 919 555 0118",
+    capacity: 110,
+    address: {
+      street: "310 Park Center Dr",
+      city: "Morrisville",
+      state: "NC",
+      zipcode: "27560",
+    },
   },
 ];
 
+// ------------------ SEED FUNCTION ------------------
 async function seed() {
   try {
     console.log("Connecting to MongoDB:", MONGO_URI);
-    await mongoose.connect(MONGO_URI);
-    console.log("DB connected");
+    await mongoose.connect(MONGO_URI, { family: 4 });
+    console.log("✔ DB connected");
 
-    // Wipe existing data for a clean slate
-    console.log("Clearing old data...");
+    console.log("🧹 Clearing old data...");
     await Food.deleteMany({});
     await Shelter.deleteMany({});
 
-    console.log("Inserting food items...");
+    console.log("🍕 Inserting food items...");
     await Food.insertMany(foodItems);
 
-    console.log("Inserting shelters...");
-    await Shelter.insertMany(shelters);
+    console.log("🏠 Inserting shelters (with login accounts)...");
+    for (const shelter of shelters) {
+      const newShelter = new Shelter(shelter);
+      await newShelter.save(); // this triggers password hashing
+    }
 
-    console.log("✅ Seeding complete!");
+    console.log("🎉 SEEDING COMPLETE!");
+    console.log("\n=== Shelter Login Accounts ===");
+    shelters.forEach((s) => {
+      console.log(`• ${s.name} → ${s.email} / ${s.password}`);
+    });
+    console.log("==============================\n");
   } catch (err) {
     console.error("❌ Seeding failed:", err);
   } finally {

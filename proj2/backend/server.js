@@ -7,6 +7,8 @@ import "dotenv/config";
 import cartRouter from "./routes/cartRoute.js";
 import orderRouter from "./routes/orderRoute.js";
 import shelterRouter from "./routes/shelterRoute.js";
+import shelterPortalRoutes from "./routes/shelterPortalRoutes.js";
+import shelterAuthRoute from "./routes/shelterAuthRoute.js";
 import { createServer } from "http";
 import { Server } from "socket.io";
 import rerouteRouter from "./routes/rerouteRoute.js";
@@ -315,6 +317,8 @@ app.use("/api/cart", cartRouter);
 app.use("/api/order", orderRouter);
 app.use("/api/shelters", shelterRouter);
 app.use("/api/reroutes", rerouteRouter);
+app.use("/api/shelter", shelterPortalRoutes);
+app.use("/api/shelter-auth", shelterAuthRoute);
 
 app.get("/", (req, res) => {
   res.send("API Working");
