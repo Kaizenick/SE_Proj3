@@ -1,0 +1,268 @@
+/* ============================
+   GLOBAL THEME (Admin Style)
+   ============================ */
+
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@100..900&display=swap');
+
+:root {
+  --primary: #ff7e00;
+  --primary-dark: #cc6400;
+  --bg-light: #fcfcfc;
+  --bg-panel: #fffdf9;
+  --bg-white: #ffffff;
+  --text-dark: #333;
+  --border: #a9a9a9;
+  --border-light: #e5e5e5;
+  --card-shadow: 0 8px 24px rgba(120, 60, 0, 0.08);
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  font-family: "Outfit", sans-serif;
+}
+
+body {
+  background: var(--bg-light);
+  color: var(--text-dark);
+}
+
+/* ============================
+   NAVBAR (Admin Style)
+   ============================ */
+
+.navbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 4%;
+  background: #fcfcfc;
+}
+
+.navbar-left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.navbar .logo {
+  width: 175px;
+  height: auto;
+}
+
+.navbar-shelter {
+  font-weight: 600;
+  font-size: 16px;
+}
+
+.navbar-right button {
+  padding: 8px 16px;
+  border-radius: 999px;
+  border: 1px solid #f97316;
+  background: #fff7ed;
+  color: #ea580c;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.navbar-right button:hover {
+  background: #ffedd5;
+}
+
+hr {
+  border: none;
+  height: 1px;
+  background-color: var(--border);
+}
+
+/* ============================
+   LAYOUT WRAPPER
+   ============================ */
+
+.app {
+  width: 100%;
+}
+
+.app-content {
+  display: flex;
+  min-height: 100vh;
+}
+
+/* ============================
+   SIDEBAR (Admin Box Menu)
+   ============================ */
+
+.sidebar {
+  width: 18%;
+  min-height: 100vh;
+  border: 1.5px solid var(--border);
+  border-top: 0;
+  background: #fff;
+}
+
+.sidebar a {
+  color: #333 !important;
+  text-decoration: none !important;
+}
+
+.sidebar-options {
+  padding-top: 50px;
+  padding-left: 20%;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.sidebar-option {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  border: 1px solid var(--border);
+  border-right: 0;
+  padding: 12px 14px;
+  border-radius: 6px 0 0 6px;
+  cursor: pointer;
+  font-size: max(1vw, 10px);
+  transition: 0.2s;
+}
+
+.sidebar-option {
+  text-decoration: none !important;
+  color: #333 !important;
+}
+
+.sidebar-option * {
+  text-decoration: none !important;
+  color: inherit !important;
+}
+
+
+.sidebar-option span {
+  font-size: 20px;
+}
+
+.sidebar-option.active,
+.sidebar-option:hover {
+  background-color: #fff0ed;
+  border-color: #fca17d;
+  color: var(--primary);
+  font-weight: 600;
+}
+
+@media (max-width: 900px) {
+  .sidebar-option p {
+    display: none;
+  }
+}
+
+/* ============================
+   MAIN CONTENT PANEL (Admin Style)
+   ============================ */
+
+.app-main {
+  flex: 1;
+  background: var(--bg-panel);
+  padding: 24px;
+  min-height: 100vh;
+}
+
+/* PAGE TITLES */
+.page-title {
+  font-size: 22px;
+  font-weight: 700;
+  color: #ea580c;
+  margin-bottom: 16px;
+}
+
+/* ============================
+   ADMIN CARDS
+   ============================ */
+
+.admin-card {
+  background: var(--bg-white);
+  border-radius: 14px;
+  padding: 18px 20px;
+  box-shadow: var(--card-shadow);
+  margin-bottom: 20px;
+}
+
+/* ============================
+   ADMIN TABLE
+   ============================ */
+
+.admin-table-container {
+  background: var(--bg-white);
+  border-radius: 14px;
+  padding: 16px;
+  box-shadow: var(--card-shadow);
+}
+
+.admin-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.admin-table th {
+  text-transform: uppercase;
+  font-size: 12px;
+  padding: 10px;
+  background: #fff7ed;
+  color: #6b7280;
+  border-bottom: 1px solid #e9d8c8;
+}
+
+.admin-table td {
+  padding: 12px;
+  border-bottom: 1px solid #f0e7db;
+}
+
+.admin-table tr:last-child td {
+  border-bottom: none;
+}
+
+/* ============================
+   BUTTONS
+   ============================ */
+
+.btn {
+  padding: 8px 16px;
+  border-radius: 6px;
+  background: var(--primary);
+  color: #fff;
+  border: none;
+  cursor: pointer;
+  font-weight: 600;
+}
+
+.btn:hover {
+  background: var(--primary-dark);
+}
+
+/* ============================
+   LOGIN PAGE
+   ============================ */
+
+.login-page {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--bg-light);
+}
+
+.login-card {
+  width: 360px;
+  background: var(--bg-white);
+  padding: 32px;
+  border-radius: 12px;
+  box-shadow: var(--card-shadow);
+}
+
+/* Center content inside main panel like admin dashboard */
+.page-container {
+  max-width: 1150px;
+  margin: 0 auto;
+  padding-bottom: 40px;
+}
+

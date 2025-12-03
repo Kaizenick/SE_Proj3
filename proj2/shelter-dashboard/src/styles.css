@@ -1,0 +1,18 @@
+/* ONLY PURE LAYOUT — NO DESIGN HERE */
+
+.layout {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+}
+
+.layout-body {
+  flex: 1;
+  display: flex;
+}
+
+.admin-table th,
+.admin-table td {
+  text-align: center;
+}
+
