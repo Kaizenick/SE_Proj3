@@ -1,5 +1,11 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { render, screen, fireEvent, waitFor } from "@testing-library/react";
+import {
+  render,
+  screen,
+  fireEvent,
+  waitFor,
+  act,
+} from "@testing-library/react";
 import { BrowserRouter } from "react-router-dom";
 import userEvent from "@testing-library/user-event";
 import PlaceOrder from "../PlaceOrder/PlaceOrder";
@@ -172,10 +178,13 @@ describe("PlaceOrder", () => {
     await user.type(screen.getByPlaceholderText("Phone"), "123-456-7890");
 
     const submitButton = screen.getByRole("button", { name: /place order/i });
-    await user.click(submitButton);
 
-    await waitFor(() => {
-      expect(toast.error).toHaveBeenCalledWith("Something Went Wrong");
+    await act(async () => {
+      await user.click(submitButton);
+
+      await waitFor(() => {
+        expect(toast.error).toHaveBeenCalledWith("Something Went Wrong");
+      });
     });
   });
 });

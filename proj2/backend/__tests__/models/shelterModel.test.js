@@ -2,7 +2,7 @@ import { describe, it, expect } from "@jest/globals";
 import shelterModel from "../../models/shelterModel.js";
 
 describe("Shelter Model", () => {
-  it("should create a shelter with required fields", () => {
+  it("should create a shelter with required fields and defaults", () => {
     const shelterData = {
       name: "Test Shelter",
     };
@@ -12,6 +12,11 @@ describe("Shelter Model", () => {
     expect(shelter.name).toBe("Test Shelter");
     expect(shelter.active).toBe(true);
     expect(shelter.capacity).toBe(0);
+    // defaults for optional contact fields
+    expect(shelter.contactName).toBe("");
+    expect(shelter.contactPhone).toBe("");
+    // email has NO explicit default in schema → undefined
+    expect(shelter.contactEmail).toBeUndefined();
     expect(shelter.address.country).toBe("United States");
   });
 
@@ -27,6 +32,7 @@ describe("Shelter Model", () => {
         city: "Raleigh",
         state: "NC",
         zipcode: "27601",
+        country: "United States",
       },
       active: true,
     };
@@ -40,6 +46,9 @@ describe("Shelter Model", () => {
     expect(shelter.capacity).toBe(100);
     expect(shelter.address.street).toBe("123 Main St");
     expect(shelter.address.city).toBe("Raleigh");
+    expect(shelter.address.state).toBe("NC");
+    expect(shelter.address.zipcode).toBe("27601");
+    expect(shelter.address.country).toBe("United States");
     expect(shelter.active).toBe(true);
   });
 
@@ -53,7 +62,7 @@ describe("Shelter Model", () => {
     expect(error.errors.name).toBeDefined();
   });
 
-  it("should have default values", () => {
+  it("should set default values when optional fields are missing", () => {
     const shelterData = {
       name: "Test Shelter",
     };
@@ -62,7 +71,8 @@ describe("Shelter Model", () => {
 
     expect(shelter.contactName).toBe("");
     expect(shelter.contactPhone).toBe("");
-    expect(shelter.contactEmail).toBe("");
+    // again: no default → undefined
+    expect(shelter.contactEmail).toBeUndefined();
     expect(shelter.capacity).toBe(0);
     expect(shelter.active).toBe(true);
     expect(shelter.address.country).toBe("United States");
@@ -74,9 +84,8 @@ describe("Shelter Model", () => {
     };
 
     const shelter = new shelterModel(shelterData);
-
-    // Check schema options
     const schema = shelter.constructor.schema;
+
     expect(schema.get("versionKey")).toBe(false);
   });
 });

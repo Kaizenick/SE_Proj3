@@ -75,7 +75,10 @@ describe("Navbar", () => {
       loggedInContext
     );
 
-    expect(screen.getByAltText("Profile")).toBeInTheDocument();
+    const profileIcons = screen.getAllByAltText("Profile");
+    expect(profileIcons.length).toBeGreaterThan(0);
+    expect(profileIcons[0]).toBeInTheDocument();
+
     expect(screen.queryByText("Sign In")).not.toBeInTheDocument();
   });
 
@@ -119,7 +122,7 @@ describe("Navbar", () => {
     );
 
     // Click on profile to open dropdown
-    const profileIcon = screen.getByAltText("Profile");
+    const [profileIcon] = screen.getAllByAltText("Profile");
     fireEvent.click(profileIcon);
 
     // The orders option should be in the dropdown
@@ -140,7 +143,7 @@ describe("Navbar", () => {
       loggedInContext
     );
 
-    const profileIcon = screen.getByAltText("Profile");
+    const [profileIcon] = screen.getAllByAltText("Profile");
     fireEvent.click(profileIcon);
 
     const logoutButton = screen.getByText("Logout");

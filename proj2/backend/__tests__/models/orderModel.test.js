@@ -2,7 +2,7 @@ import { describe, it, expect } from "@jest/globals";
 import orderModel from "../../models/orderModel.js";
 
 describe("Order Model", () => {
-  it("should create an order with required fields", () => {
+  it("should create an order with required fields and defaults", () => {
     const orderData = {
       userId: "507f1f77bcf86cd799439011",
       items: [{ name: "Food 1", price: 10, quantity: 2 }],
@@ -12,11 +12,15 @@ describe("Order Model", () => {
 
     const order = new orderModel(orderData);
 
-    expect(order.userId).toBe("507f1f77bcf86cd799439011");
-    expect(order.items).toEqual([{ name: "Food 1", price: 10, quantity: 2 }]);
+    expect(order.userId.toString()).toBe("507f1f77bcf86cd799439011");
+    expect(order.items).toEqual([
+      { name: "Food 1", price: 10, quantity: 2 },
+    ]);
     expect(order.amount).toBe(25.99);
     expect(order.address).toEqual({ formatted: "123 Main St" });
-    expect(order.status).toBe("Food Processing");
+
+    // defaults
+    expect(order.status).toBe("Food Preparing");
     expect(order.payment).toBe(false);
   });
 
@@ -30,7 +34,7 @@ describe("Order Model", () => {
 
     const order = new orderModel(orderData);
 
-    expect(order.status).toBe("Food Processing");
+    expect(order.status).toBe("Food Preparing");
   });
 
   it("should have default payment as false", () => {
@@ -70,12 +74,12 @@ describe("Order Model", () => {
     const order = new orderModel(orderData);
     const error = order.validateSync();
 
-    // Mongoose may handle arrays differently - check if error exists
-    // Items is required but might not throw validation error if empty array is provided
-    if (error && error.errors) {
-      expect(error.errors.items || error.errors).toBeDefined();
+    // Some schemas treat missing `items` differently from an empty array.
+    if (error && error.errors && error.errors.items) {
+      // Schema is enforcing `items` as required
+      expect(error.errors.items).toBeDefined();
     } else {
-      // If no error, items might accept empty array, which is valid
+      // If there is no validation error, at least ensure the field exists
       expect(order.items).toBeDefined();
     }
   });

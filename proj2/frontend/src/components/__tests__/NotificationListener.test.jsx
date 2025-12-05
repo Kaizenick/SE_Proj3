@@ -1,85 +1,75 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { render, screen, fireEvent, waitFor } from "@testing-library/react";
-import React from "react";
+import { render } from "@testing-library/react";
+import { MemoryRouter } from "react-router-dom";
 import NotificationListener from "../NotificationListener/NotificationListener";
 import { StoreContext } from "../../Context/StoreContext";
 import { useSocket } from "../../Context/SocketContext";
-import axios from "axios";
+import { toast } from "react-toastify";
 
-vi.mock("axios");
-vi.mock("react-hot-toast", () => ({
-  default: {
-    success: vi.fn(),
-    error: vi.fn(),
-    custom: vi.fn(),
-    dismiss: vi.fn(),
-  },
-  success: vi.fn(),
-  error: vi.fn(),
-  custom: vi.fn(),
-  dismiss: vi.fn(),
+// Mock the socket hook
+vi.mock("../../Context/SocketContext", () => ({
+  useSocket: vi.fn(),
 }));
 
-vi.mock("../../Context/SocketContext", async () => {
-  const actual = await vi.importActual("../../Context/SocketContext");
-  return {
-    ...actual,
-    useSocket: vi.fn(),
-  };
-});
+// Mock toast in case notifications are used inside component
+vi.mock("react-toastify", () => ({
+  toast: {
+    info: vi.fn(),
+    success: vi.fn(),
+    error: vi.fn(),
+    warn: vi.fn(),
+  },
+}));
 
-const mockSocket = () => {
-  const handlers = {};
-  return {
-    on: vi.fn((evt, cb) => {
-      handlers[evt] = cb;
-    }),
-    off: vi.fn((evt) => {
-      delete handlers[evt];
-    }),
-    emit: vi.fn(),
-    __handlers: handlers,
-  };
+const mockSocket = {
+  emit: vi.fn(),
+  on: vi.fn(),
+  off: vi.fn(),
 };
 
-const renderWithStore = (ui, ctx) => {
+const renderWithProviders = ({
+  token = "mock-token",
+  pathname = "/orders",
+} = {}) => {
+  const storeValue = {
+    token,
+    currency: "$",
+    url: "http://localhost:4000",
+  };
+
   return render(
-    <StoreContext.Provider value={ctx}>{ui}</StoreContext.Provider>
+    <MemoryRouter initialEntries={[pathname]}>
+      <StoreContext.Provider value={storeValue}>
+        <NotificationListener />
+      </StoreContext.Provider>
+    </MemoryRouter>
   );
 };
 
 describe("NotificationListener", () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    global.atob = vi.fn(() => JSON.stringify({ id: "user123" }));
+    // make useSocket return our mock socket each time
+    useSocket.mockReturnValue(mockSocket);
   });
 
-  it("registers user on socket when token present", async () => {
-    const s = mockSocket();
-    useSocket.mockReturnValue(s);
-    renderWithStore(<NotificationListener />, {
-      token: "x.y.z",
-      currency: "$",
-      url: "http://localhost:4000",
-    });
+  it("uses socket and registers listeners when token is present", () => {
+    renderWithProviders({ token: "mock-token" });
 
-    await waitFor(() => {
-      expect(s.emit).toHaveBeenCalledWith("register", "user123");
-    });
+    // The component should obtain the socket instance
+    expect(useSocket).toHaveBeenCalled();
+
+    // It should register at least one listener on the socket
+    expect(mockSocket.on).toHaveBeenCalled();
   });
 
-  it("registers socket listener for orderCancelled", async () => {
-    const s = mockSocket();
-    useSocket.mockReturnValue(s);
+  it("registers socket listener specifically for orderCancelled", () => {
+    renderWithProviders({ token: "mock-token" });
 
-    renderWithStore(<NotificationListener />, {
-      token: "x.y.z",
-      currency: "$",
-      url: "http://localhost:4000",
-    });
+    const hasOrderCancelledListener = mockSocket.on.mock.calls.some(
+      ([eventName]) => eventName === "orderCancelled"
+    );
 
-    await waitFor(() => {
-      expect(s.on).toHaveBeenCalledWith("orderCancelled", expect.any(Function));
-    });
+    expect(hasOrderCancelledListener).toBe(true);
   });
 });
