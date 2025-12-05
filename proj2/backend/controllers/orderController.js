@@ -15,40 +15,54 @@ const CLAIM_DISCOUNT_RATE = 1 / 3;
 
 // Status constants & FSM rules
 const STATUS = {
-  PROCESSING: "Food Processing",
+  PROCESSING: "Food Preparing",
+  LOOKING_FOR_DRIVER: "Looking for driver",
   DRIVER_ASSIGNED: "Driver assigned",
   OUT_FOR_DELIVERY: "Out for delivery",
   DELIVERED: "Delivered",
   REDISTRIBUTE: "Redistribute",
   CANCELLED: "Cancelled",
-  DONATED: "Donated", // NEW STATE
+  DONATED: "Donated",
 };
 
 const STATUS_VALUES = new Set(Object.values(STATUS));
+// Helper to match a status string against the known ones (case/space insensitive)
+const normalizeStatus = (value) => (value || "").trim().toLowerCase();
 
+const canonicalizeStatus = (value) => {
+  const norm = normalizeStatus(value);
+  for (const s of STATUS_VALUES) {
+    if (normalizeStatus(s) === norm) return s;
+  }
+  return null;
+};
 /**
  * Allowed transitions:
- *  - Food Processing   -> Out for delivery, Redistribute
- *  - Out for delivery  -> Delivered, Redistribute
- *  - Redistribute      -> Food Processing, Cancelled, Donated to shelter
- *  - Cancelled         -> Donated to shelter (admin-only)
- *  - Donated to shelter -> (terminal)
- *  - Delivered         -> (terminal)
+ *
+ *  - Food Preparing      -> Looking for driver, Redistribute
+ *  - Looking for driver  -> Driver assigned, Redistribute
+ *  - Driver assigned     -> Out for delivery, Redistribute
+ *  - Out for delivery    -> Delivered, Redistribute
+ *  - Redistribute        -> Food Preparing, Cancelled, Donated
+ *  - Cancelled           -> Donated
+ *  - Delivered, Donated  -> terminal
  */
 const ALLOWED_TRANSITIONS = {
-  // User just placed order → restaurant working on it
   [STATUS.PROCESSING]: new Set([
-    STATUS.DRIVER_ASSIGNED,   // driver is chosen
-    STATUS.REDISTRIBUTE,      // order cancelled & goes to redistribute
+    STATUS.LOOKING_FOR_DRIVER,
+    STATUS.REDISTRIBUTE,
   ]),
 
-  // After driver assigned → either actually goes out or gets redistributed
+  [STATUS.LOOKING_FOR_DRIVER]: new Set([
+    STATUS.DRIVER_ASSIGNED,
+    STATUS.REDISTRIBUTE,
+  ]),
+
   [STATUS.DRIVER_ASSIGNED]: new Set([
     STATUS.OUT_FOR_DELIVERY,
     STATUS.REDISTRIBUTE,
   ]),
 
-  // Once it’s out → can be delivered or redistributed
   [STATUS.OUT_FOR_DELIVERY]: new Set([
     STATUS.DELIVERED,
     STATUS.REDISTRIBUTE,
@@ -59,6 +73,7 @@ const ALLOWED_TRANSITIONS = {
     STATUS.CANCELLED,
     STATUS.DONATED,
   ]),
+
   [STATUS.CANCELLED]: new Set([STATUS.DONATED]),
   [STATUS.DONATED]: new Set(),
   [STATUS.DELIVERED]: new Set(),
@@ -67,11 +82,11 @@ const ALLOWED_TRANSITIONS = {
 /**
  * Checks if a status transition is allowed according to the order state machine
  */
-function canTransition(from, to) {
-  if (from === to) return true;
-  const nexts = ALLOWED_TRANSITIONS[from] || new Set();
-  return nexts.has(to);
-}
+const canTransition = (current, next) => {
+  if (current === next) return true;
+  const allowed = ALLOWED_TRANSITIONS[current];
+  return !!allowed && allowed.has(next);
+};
 
 /**
  * Try to infer whether an order is veg / non-veg / mixed.
@@ -132,8 +147,8 @@ const cancelOrder = async (req, res) => {
 
     const current = order.status || STATUS.PROCESSING;
     const userCancelable = new Set([
-      STATUS.PROCESSING,
-      STATUS.OUT_FOR_DELIVERY,
+      STATUS.PROCESSING,           // Food Preparing
+      STATUS.LOOKING_FOR_DRIVER,   // Admin has posted it, but no driver yet
     ]);
     if (!userCancelable.has(current))
       return res.json({
@@ -341,35 +356,53 @@ const userOrders = async (req, res) => {
  */
 const updateStatus = async (req, res) => {
   try {
-    const { orderId, status: next } = req.body;
+    const { orderId, status: nextRaw } = req.body;
 
-    if (!STATUS_VALUES.has(next))
-      return res.json({ success: false, message: "Invalid status value" });
+    // Map what admin sent to one of our known status strings
+    const next = canonicalizeStatus(nextRaw);
+
+    if (!next) {
+      return res.json({
+        success: false,
+        message: `Invalid status value: "${nextRaw}"`,
+      });
+    }
 
     const order = await orderModel.findById(orderId);
-    if (!order) return res.json({ success: false, message: "Order not found" });
+    if (!order)
+      return res.json({ success: false, message: "Order not found" });
 
     const current = order.status || STATUS.PROCESSING;
-    if (current === next)
+
+    if (normalizeStatus(current) === normalizeStatus(next)) {
       return res.json({
         success: true,
         message: "Status unchanged",
         data: order,
       });
+    }
 
     if (!canTransition(current, next)) {
-      const allowed = [...(ALLOWED_TRANSITIONS[current] || [])];
+      const allowed =
+        ALLOWED_TRANSITIONS[current] &&
+        Array.from(ALLOWED_TRANSITIONS[current]);
       return res.json({
         success: false,
         message:
           `Illegal transition: "${current}" → "${next}". ` +
-          `Allowed: ${allowed.length ? allowed.join(", ") : "none"}`,
+          `Allowed: ${
+            allowed && allowed.length ? allowed.join(", ") : "none"
+          }`,
       });
     }
 
     order.status = next;
     await order.save();
-    return res.json({ success: true, message: "Status Updated", data: order });
+    return res.json({
+      success: true,
+      message: "Status Updated",
+      data: order,
+    });
   } catch (error) {
     console.log(error);
     res.json({ success: false, message: "Error" });
@@ -566,17 +599,15 @@ const driverAvailableOrders = async (req, res) => {
       });
     }
 
+    // Any order with status "Looking for driver" is considered available.
+    // The claim API enforces that only one driver can claim it.
     const orders = await orderModel
       .find({
-        $or: [{ driverId: { $exists: false } }, { driverId: null }],
-        // optionally also filter by status, etc.
+        status: STATUS.LOOKING_FOR_DRIVER,
       })
       .sort({ date: -1 });
 
-    return res.json({
-      success: true,
-      data: orders,
-    });
+    return res.json({ success: true, data: orders });
   } catch (error) {
     console.error("driverAvailableOrders error:", error);
     return res.json({
@@ -610,6 +641,7 @@ const driverMyOrders = async (req, res) => {
 };
 
 // Driver claims an order to deliver
+// Driver claims an order to deliver
 const driverClaimOrder = async (req, res) => {
   try {
     const { orderId } = req.body;
@@ -629,27 +661,33 @@ const driverClaimOrder = async (req, res) => {
       return res.json({ success: false, message: "Order not found" });
     }
 
-    // If someone already claimed it, don't let this driver take it
-    if (order.driverId && order.driverId !== driverId) {
+    const current = order.status || STATUS.PROCESSING;
+
+    // Only claimable when admin has set "Looking for driver"
+    if (current !== STATUS.LOOKING_FOR_DRIVER) {
+      return res.json({
+        success: false,
+        message: `Order is currently "${current}" and not looking for a driver`,
+      });
+    }
+
+    // If someone already claimed it, block
+    if (order.driverId && order.driverId.toString() !== driverId.toString()) {
       return res.json({
         success: false,
         message: "Order already claimed by another driver",
       });
     }
 
-    // Assign driver
+    // Assign driver and move to Driver assigned
     order.driverId = driverId;
     order.driverName = driver.name;
     order.driverAssignedAt = new Date();
-
-    // Optionally, ensure status moves to "Out for delivery"
-    // only if it isn't already there
     order.status = STATUS.DRIVER_ASSIGNED;
-
 
     await order.save();
 
-    // Optional: notify other clients via Socket.IO so they can remove it live
+    // Notify via Socket.IO (optional, you already had this wiring)
     const io = req.app.get("socketio");
     if (io) {
       io.emit("driver-order-claimed", {
@@ -668,7 +706,71 @@ const driverClaimOrder = async (req, res) => {
     console.error("driverClaimOrder error:", error);
     return res.json({
       success: false,
-      message: "Error while claiming order",
+      message: "Error claiming order",
+    });
+  }
+};
+
+// Driver marks an order as delivered
+const driverMarkDelivered = async (req, res) => {
+  try {
+    const { orderId } = req.body;
+    const driverId = req.body.userId; // from authMiddleware
+
+    const driver = await userModel.findById(driverId);
+    if (!driver || !driver.isDriver) {
+      return res.json({
+        success: false,
+        message: "Only drivers can mark delivery",
+      });
+    }
+
+    const order = await orderModel.findById(orderId);
+    if (!order) {
+      return res.json({ success: false, message: "Order not found" });
+    }
+
+    // Ensure this driver is assigned to this order
+    if (!order.driverId || order.driverId.toString() !== driverId.toString()) {
+      return res.json({
+        success: false,
+        message: "You are not assigned to this order",
+      });
+    }
+
+    const current = order.status || STATUS.PROCESSING;
+
+    if (!canTransition(current, STATUS.DELIVERED)) {
+      return res.json({
+        success: false,
+        message: `Cannot mark order as delivered from status "${current}"`,
+      });
+    }
+
+    order.status = STATUS.DELIVERED;
+    order.deliveredAt = new Date();
+
+    await order.save();
+
+    const io = req.app.get("socketio");
+    if (io) {
+      io.emit("driver-order-delivered", {
+        orderId: order._id.toString(),
+        driverId,
+        driverName: driver.name,
+      });
+    }
+
+    return res.json({
+      success: true,
+      message: "Order marked as delivered",
+      data: order,
+    });
+  } catch (error) {
+    console.error("driverMarkDelivered error:", error);
+    return res.json({
+      success: false,
+      message: "Error marking order as delivered",
     });
   }
 };
@@ -687,4 +789,5 @@ export {
   driverAvailableOrders,
   driverMyOrders,
   driverClaimOrder,
+  driverMarkDelivered,
 };

@@ -5,9 +5,9 @@ import axios from "axios";
 import { assets, url, currency } from "../../assets/assets";
 
 const STATUS_OPTIONS = [
-  "Food Processing",
+  "Food Preparing",
+  "Looking for driver",
   "Out for delivery",
-  "Delivered",
   "Redistribute",
   "Cancelled",
 ];
@@ -198,15 +198,24 @@ const Order = () => {
 
               <select
                 onChange={(e) => statusHandler(e, order._id)}
-                value={order.status || "Food Processing"}
-                disabled={TERMINAL.has(order.status)} // disable Delivered/Cancelled/Donated
+                // fallback only used if status is missing
+                value={order.status || "Food Preparing"}
+                disabled={TERMINAL.has(order.status)} // Delivered / Cancelled / Donated -> read-only
                 className={`status-select status--${(
-                  order.status || "Food Processing"
+                  order.status || "Food Preparing"
                 )
                   .split(" ")
                   .join("-")
                   .toLowerCase()}`}
               >
+                {/* If current status is not in STATUS_OPTIONS (e.g. "Driver assigned", "Delivered"),
+                    render it as a disabled option so it still shows correctly */}
+                {order.status && !STATUS_OPTIONS.includes(order.status) && (
+                  <option value={order.status} disabled>
+                    {order.status}
+                  </option>
+                )}
+
                 {STATUS_OPTIONS.map((s) => (
                   <option key={s} value={s}>
                     {s}

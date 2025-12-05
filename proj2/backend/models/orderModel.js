@@ -1,7 +1,8 @@
 import mongoose from "mongoose";
 
 const STATUS_VALUES = [
-  "Food Processing",
+  "Food Preparing",
+  "Looking for driver",
   "Driver assigned",
   "Out for delivery",
   "Delivered",
@@ -34,10 +35,10 @@ const orderSchema = new mongoose.Schema({
 
   // Updated with enum for stricter validation
   status: {
-    type: String,
-    enum: STATUS_VALUES,
-    default: "Food Processing",
-  },
+  type: String,
+  enum: STATUS_VALUES,
+  default: "Food Preparing",
+},
 
   date: { type: Date, default: Date.now },
   payment: { type: Boolean, default: false },
