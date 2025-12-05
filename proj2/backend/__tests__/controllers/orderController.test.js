@@ -96,7 +96,7 @@ describe("Order placement controllers", () => {
       name: "User A",
       email: "a@example.com",
       password: "pass",
-      cartData: { "1": 2 },
+      cartData: { 1: 2 },
     });
 
     const req = createMockReq({
@@ -130,7 +130,7 @@ describe("Order placement controllers", () => {
       name: "User B",
       email: "b@example.com",
       password: "pass",
-      cartData: { "2": 3 },
+      cartData: { 2: 3 },
     });
 
     const req = createMockReq({
@@ -189,9 +189,7 @@ describe("Order listing controllers", () => {
   it("listOrders should handle database errors", async () => {
     jest.spyOn(console, "log").mockImplementation(() => {});
 
-    const sortMock = jest
-      .fn()
-      .mockRejectedValueOnce(new Error("DB error"));
+    const sortMock = jest.fn().mockRejectedValueOnce(new Error("DB error"));
     const spy = jest
       .spyOn(orderModel, "find")
       .mockReturnValue({ sort: sortMock });
@@ -241,9 +239,7 @@ describe("Order listing controllers", () => {
   it("userOrders should handle database errors", async () => {
     jest.spyOn(console, "error").mockImplementation(() => {});
 
-    const sortMock = jest
-      .fn()
-      .mockRejectedValueOnce(new Error("DB error"));
+    const sortMock = jest.fn().mockRejectedValueOnce(new Error("DB error"));
     const spy = jest
       .spyOn(orderModel, "find")
       .mockReturnValue({ sort: sortMock });
@@ -964,9 +960,7 @@ describe("rateOrder", () => {
     await rateOrder(req, res);
 
     expect(res.body.success).toBe(false);
-    expect(res.body.message).toBe(
-      "Rating must be a number between 1 and 5"
-    );
+    expect(res.body.message).toBe("Rating must be a number between 1 and 5");
   });
 
   it("should require Delivered status before rating", async () => {
@@ -1082,13 +1076,9 @@ describe("Driver order flows", () => {
       isDriver: true,
     });
 
-    jest
-      .spyOn(console, "error")
-      .mockImplementation(() => {});
+    jest.spyOn(console, "error").mockImplementation(() => {});
 
-    const sortMock = jest
-      .fn()
-      .mockRejectedValueOnce(new Error("DB error"));
+    const sortMock = jest.fn().mockRejectedValueOnce(new Error("DB error"));
 
     const spy = jest
       .spyOn(orderModel, "find")
@@ -1148,13 +1138,9 @@ describe("Driver order flows", () => {
       isDriver: true,
     });
 
-    jest
-      .spyOn(console, "error")
-      .mockImplementation(() => {});
+    jest.spyOn(console, "error").mockImplementation(() => {});
 
-    const sortMock = jest
-      .fn()
-      .mockRejectedValueOnce(new Error("DB error"));
+    const sortMock = jest.fn().mockRejectedValueOnce(new Error("DB error"));
 
     const spy = jest
       .spyOn(orderModel, "find")
@@ -1302,9 +1288,7 @@ describe("Driver order flows", () => {
     await driverClaimOrder(req, res);
 
     expect(res.body.success).toBe(false);
-    expect(res.body.message).toBe(
-      "Order already claimed by another driver"
-    );
+    expect(res.body.message).toBe("Order already claimed by another driver");
   });
 
   it("driverClaimOrder should return error when order not found", async () => {

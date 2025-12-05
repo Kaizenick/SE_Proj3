@@ -1,4 +1,11 @@
-import { describe, it, expect, beforeEach, afterEach, jest } from "@jest/globals";
+import {
+  describe,
+  it,
+  expect,
+  beforeEach,
+  afterEach,
+  jest,
+} from "@jest/globals";
 import rerouteModel from "../../models/rerouteModel.js";
 import { listReroutes } from "../../controllers/rerouteController.js";
 
@@ -97,7 +104,9 @@ describe("Reroute Controller", () => {
 
     it("should handle errors and return failure response", async () => {
       // Spy to avoid noisy console.error in test output
-      const consoleSpy = jest.spyOn(console, "error").mockImplementation(() => {});
+      const consoleSpy = jest
+        .spyOn(console, "error")
+        .mockImplementation(() => {});
 
       rerouteModel.find = jest.fn().mockReturnValue({
         sort: jest.fn().mockReturnValue({

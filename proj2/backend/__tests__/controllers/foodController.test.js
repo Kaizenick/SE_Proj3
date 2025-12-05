@@ -81,16 +81,10 @@ describe("Food Controller", () => {
 
       const [f1, f2] = payload.data;
 
-      expect(f1.image.data).toBe(
-        Buffer.from("image-1").toString("base64")
-      );
-      expect(f1.model3D.data).toBe(
-        Buffer.from("model-1").toString("base64")
-      );
+      expect(f1.image.data).toBe(Buffer.from("image-1").toString("base64"));
+      expect(f1.model3D.data).toBe(Buffer.from("model-1").toString("base64"));
 
-      expect(f2.image.data).toBe(
-        Buffer.from("image-2").toString("base64")
-      );
+      expect(f2.image.data).toBe(Buffer.from("image-2").toString("base64"));
       expect(f2.model3D).toBeUndefined();
     });
 
@@ -218,9 +212,7 @@ describe("Food Controller", () => {
       };
 
       jest.spyOn(foodModel, "findById").mockResolvedValue(mockFood);
-      jest
-        .spyOn(foodModel, "findByIdAndDelete")
-        .mockResolvedValue(mockFood);
+      jest.spyOn(foodModel, "findByIdAndDelete").mockResolvedValue(mockFood);
 
       const unlinkMock = jest
         .spyOn(fs, "unlink")
