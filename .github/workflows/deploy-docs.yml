@@ -1,13 +1,7 @@
 name: Deploy Documentation
 
 on:
-  push:
-    branches:
-      - main
-  pull_request:
-    types: [closed]
-    branches:
-      - main
+  workflow_dispatch:
 
 permissions:
   contents: read
@@ -21,7 +15,6 @@ concurrency:
 jobs:
   build:
     runs-on: ubuntu-latest
-    if: github.event_name == 'push' || (github.event.pull_request.merged == true)
 
     defaults:
       run:
