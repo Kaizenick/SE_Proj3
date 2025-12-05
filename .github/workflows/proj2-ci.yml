@@ -13,6 +13,7 @@ jobs:
     defaults:
       run:
         working-directory: proj2/backend
+
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -21,9 +22,11 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 18
+          cache: npm
+          cache-dependency-path: proj2/backend/package-lock.json
 
       - name: Install dependencies
-        run: npm install
+        run: npm ci
 
       - name: Run backend tests
         run: npm test
@@ -37,11 +40,12 @@ jobs:
           name: backend-coverage
           path: proj2/backend/coverage
 
-      - name: Start backend server
+      # Optional smoke check – won't fail CI if server isn't up
+      - name: Start backend server (smoke check)
         run: |
-          nohup npm run server &
-          sleep 5
-          curl -f http://localhost:4000/api/user || echo "Backend not responding"
+          nohup npm run server >/dev/null 2>&1 &
+          sleep 7
+          curl http://localhost:4000 || echo "Backend not responding (ignored in CI)"
 
   frontend:
     name: Frontend Test & Build Check
@@ -50,6 +54,7 @@ jobs:
     defaults:
       run:
         working-directory: proj2/frontend
+
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -58,9 +63,11 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 18
+          cache: npm
+          cache-dependency-path: proj2/frontend/package-lock.json
 
       - name: Install dependencies
-        run: npm install
+        run: npm ci
 
       - name: Run frontend tests
         run: npm test
@@ -90,6 +97,7 @@ jobs:
     defaults:
       run:
         working-directory: proj2/admin
+
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -98,9 +106,11 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 18
+          cache: npm
+          cache-dependency-path: proj2/admin/package-lock.json
 
       - name: Install dependencies
-        run: npm install
+        run: npm ci
 
       - name: Run admin tests
         run: npm test
