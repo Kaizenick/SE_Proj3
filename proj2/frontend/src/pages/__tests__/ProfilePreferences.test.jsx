@@ -1,11 +1,4 @@
-import {
-  describe,
-  it,
-  expect,
-  vi,
-  beforeEach,
-  afterEach,
-} from "vitest";
+import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import {
   render,
   screen,
@@ -94,15 +87,11 @@ describe("ProfilePreferences page", () => {
     });
 
     // Diet select should show "Vegetarian only"
-    expect(
-      screen.getByDisplayValue("Vegetarian only")
-    ).toBeInTheDocument();
+    expect(screen.getByDisplayValue("Vegetarian only")).toBeInTheDocument();
 
     // Sugar select should show sugar-free option
     expect(
-      screen.getByDisplayValue(
-        "Avoid sweets / desserts (sugar-free)"
-      )
+      screen.getByDisplayValue("Avoid sweets / desserts (sugar-free)")
     ).toBeInTheDocument();
 
     // No toast error on success path
@@ -115,9 +104,7 @@ describe("ProfilePreferences page", () => {
     renderWithStore({ url: API_URL, token: "test-token" });
 
     await waitFor(() => {
-      expect(toast.error).toHaveBeenCalledWith(
-        "Failed to load profile"
-      );
+      expect(toast.error).toHaveBeenCalledWith("Failed to load profile");
     });
   });
 
@@ -147,20 +134,16 @@ describe("ProfilePreferences page", () => {
     });
 
     // Change diet and sugar selects
-    fireEvent.change(
-      screen.getByDisplayValue("No diet preference"),
-      { target: { value: "veg-only" } }
-    );
+    fireEvent.change(screen.getByDisplayValue("No diet preference"), {
+      target: { value: "veg-only" },
+    });
 
-    fireEvent.change(
-      screen.getByDisplayValue("Okay with sweets / desserts"),
-      { target: { value: "no-sweets" } }
-    );
+    fireEvent.change(screen.getByDisplayValue("Okay with sweets / desserts"), {
+      target: { value: "no-sweets" },
+    });
 
     // Click "Save preferences" button
-    fireEvent.click(
-      screen.getByRole("button", { name: /save preferences/i })
-    );
+    fireEvent.click(screen.getByRole("button", { name: /save preferences/i }));
 
     // 2nd call should be /preferences with updated values
     await waitFor(() => {
@@ -205,14 +188,10 @@ describe("ProfilePreferences page", () => {
     });
 
     // Trigger submit without changing anything
-    fireEvent.click(
-      screen.getByRole("button", { name: /save preferences/i })
-    );
+    fireEvent.click(screen.getByRole("button", { name: /save preferences/i }));
 
     await waitFor(() => {
-      expect(toast.error).toHaveBeenCalledWith(
-        "Update failed"
-      );
+      expect(toast.error).toHaveBeenCalledWith("Update failed");
     });
   });
 
@@ -238,14 +217,10 @@ describe("ProfilePreferences page", () => {
       expect(screen.getByDisplayValue("Dana")).toBeInTheDocument();
     });
 
-    fireEvent.click(
-      screen.getByRole("button", { name: /save preferences/i })
-    );
+    fireEvent.click(screen.getByRole("button", { name: /save preferences/i }));
 
     await waitFor(() => {
-      expect(toast.error).toHaveBeenCalledWith(
-        "Failed to update preferences"
-      );
+      expect(toast.error).toHaveBeenCalledWith("Failed to update preferences");
     });
   });
 });

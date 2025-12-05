@@ -1,19 +1,7 @@
 // src/components/__tests__/NotificationListener.test.jsx
 import React from "react";
-import {
-  describe,
-  it,
-  beforeEach,
-  afterEach,
-  expect,
-  vi,
-} from "vitest";
-import {
-  render,
-  cleanup,
-  fireEvent,
-  waitFor,
-} from "@testing-library/react";
+import { describe, it, beforeEach, afterEach, expect, vi } from "vitest";
+import { render, cleanup, fireEvent, waitFor } from "@testing-library/react";
 
 // Polyfill atob for Node if needed
 if (typeof global.atob === "undefined") {
@@ -193,9 +181,7 @@ describe("NotificationListener", () => {
     const [renderer] = toast.custom.mock.calls[0];
 
     // Render the toast's custom content into DOM
-    const { getByText } = render(
-      renderer({ id: "toast-1", visible: true })
-    );
+    const { getByText } = render(renderer({ id: "toast-1", visible: true }));
 
     const claimBtn = getByText(/Claim Order/i);
 
@@ -209,9 +195,7 @@ describe("NotificationListener", () => {
         { headers: { token: TOKEN_WITH_USER_ID } }
       );
 
-      expect(toast.success).toHaveBeenCalledWith(
-        "Order claimed successfully!"
-      );
+      expect(toast.success).toHaveBeenCalledWith("Order claimed successfully!");
 
       expect(mockSocket.emit).toHaveBeenCalledWith("claimOrder", {
         orderId: "order-999",

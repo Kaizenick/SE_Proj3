@@ -1,12 +1,7 @@
 // frontend/src/pages/__tests__/MyOrders.test.jsx
 import React from "react";
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import {
-  render,
-  screen,
-  waitFor,
-  fireEvent,
-} from "@testing-library/react";
+import { render, screen, waitFor, fireEvent } from "@testing-library/react";
 import { BrowserRouter } from "react-router-dom";
 import axios from "axios";
 
@@ -275,8 +270,6 @@ describe("MyOrders Page", () => {
     });
 
     // Rate button should go away after rating is set
-    expect(
-      screen.queryByRole("button", { name: /rate order/i })
-    ).toBeNull();
+    expect(screen.queryByRole("button", { name: /rate order/i })).toBeNull();
   });
 });

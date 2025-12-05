@@ -74,7 +74,7 @@ describe("StoreContextProvider", () => {
     axios.post.mockResolvedValueOnce({
       data: {
         success: true,
-        cartData: { "1": 2 },
+        cartData: { 1: 2 },
       },
     });
 
@@ -91,7 +91,7 @@ describe("StoreContextProvider", () => {
       expect(ctxRef).not.toBeNull();
       expect(ctxRef.food_list.length).toBe(1);
       expect(ctxRef.token).toBe("valid-token");
-      expect(ctxRef.cartItems).toEqual({ "1": 2 });
+      expect(ctxRef.cartItems).toEqual({ 1: 2 });
     });
 
     expect(axios.post).toHaveBeenCalledWith(
@@ -192,11 +192,7 @@ describe("StoreContextProvider", () => {
     const TestConsumer = () => {
       const ctx = React.useContext(StoreContext);
       ctxRef = ctx;
-      return (
-        <div>
-          total={ctx.getTotalCartAmount()}
-        </div>
-      );
+      return <div>total={ctx.getTotalCartAmount()}</div>;
     };
 
     renderWithProvider(<TestConsumer />);
@@ -250,7 +246,7 @@ describe("StoreContextProvider", () => {
 
     act(() => {
       ctxRef.setToken("abc-token");
-      ctxRef.setCartItems({ "1": 2 });
+      ctxRef.setCartItems({ 1: 2 });
     });
 
     await act(async () => {
@@ -295,7 +291,7 @@ describe("StoreContextProvider", () => {
 
     // set cart: 2x item "1" (price 10), 3x unknown item "999"
     act(() => {
-      ctxRef.setCartItems({ "1": 2, "999": 3 });
+      ctxRef.setCartItems({ 1: 2, 999: 3 });
     });
 
     // re-read total after state update

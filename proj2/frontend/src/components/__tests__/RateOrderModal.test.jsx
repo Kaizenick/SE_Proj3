@@ -1,11 +1,4 @@
-import {
-  describe,
-  it,
-  expect,
-  vi,
-  beforeEach,
-  afterEach,
-} from "vitest";
+import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import {
   render,
   screen,
@@ -37,7 +30,7 @@ vi.mock("react-hot-toast", () => {
 
   return {
     default: toast, // default import
-    toast,          // named import
+    toast, // named import
     __esModule: true,
   };
 });
@@ -55,11 +48,12 @@ const sampleOrder = {
   feedback: "",
 };
 
-const renderWithStore = (ui, { url = "http://api.example.com", token = "test-token" } = {}) =>
+const renderWithStore = (
+  ui,
+  { url = "http://api.example.com", token = "test-token" } = {}
+) =>
   render(
-    <StoreContext.Provider value={{ url, token }}>
-      {ui}
-    </StoreContext.Provider>
+    <StoreContext.Provider value={{ url, token }}>{ui}</StoreContext.Provider>
   );
 
 describe("RateOrderModal", () => {

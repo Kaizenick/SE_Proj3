@@ -4,7 +4,6 @@ import { MemoryRouter, Routes, Route } from "react-router-dom";
 import ProtectedRoute from "../ProtectedRoute.jsx";
 import { StoreContext } from "../../Context/StoreContext.jsx";
 
-
 const renderWithStoreAndRouter = ({ token }) => {
   return render(
     <StoreContext.Provider value={{ token }}>
