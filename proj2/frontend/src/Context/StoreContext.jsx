@@ -102,29 +102,28 @@ const StoreContextProvider = (props) => {
   };*/
 
   const loadCartData = async (token) => {
-  try {
-    const response = await axios.post(
-      url + "/api/cart/get",
-      {},
-      { headers: token }
-    );
+    try {
+      const response = await axios.post(
+        url + "/api/cart/get",
+        {},
+        { headers: token }
+      );
 
-    if (response.data?.success && response.data.cartData) {
-      setCartItems(response.data.cartData);
-    } else {
-      // If token is invalid or no cart data, reset cart & token
+      if (response.data?.success && response.data.cartData) {
+        setCartItems(response.data.cartData);
+      } else {
+        // If token is invalid or no cart data, reset cart & token
+        setCartItems({});
+        localStorage.removeItem("token");
+        setToken("");
+      }
+    } catch (err) {
+      console.error("Failed to load cart:", err);
       setCartItems({});
       localStorage.removeItem("token");
       setToken("");
     }
-  } catch (err) {
-    console.error("Failed to load cart:", err);
-    setCartItems({});
-    localStorage.removeItem("token");
-    setToken("");
-  }
-};
-
+  };
 
   useEffect(() => {
     async function loadData() {

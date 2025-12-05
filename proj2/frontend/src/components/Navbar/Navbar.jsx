@@ -7,13 +7,8 @@ import { ThemeContext } from "../../Context/ThemeContext";
 
 const Navbar = ({ setShowLogin }) => {
   const [menu, setMenu] = useState("home");
-  const {
-    getTotalCartAmount,
-    token,
-    setToken,
-    searchTerm,
-    setSearchTerm,
-  } = useContext(StoreContext);
+  const { getTotalCartAmount, token, setToken, searchTerm, setSearchTerm } =
+    useContext(StoreContext);
   const navigate = useNavigate();
   const { theme, toggleTheme } = useContext(ThemeContext);
 

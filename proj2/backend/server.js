@@ -59,15 +59,9 @@ function isVegOnlyOrder(orderItems = []) {
       return item.isVeg === true;
     }
 
-    const cat = (item.category || item.type || "")
-      .toString()
-      .toLowerCase();
+    const cat = (item.category || item.type || "").toString().toLowerCase();
 
-    if (
-      cat.includes("non-veg") ||
-      cat.includes("nonveg") ||
-      cat === "nv"
-    ) {
+    if (cat.includes("non-veg") || cat.includes("nonveg") || cat === "nv") {
       return false;
     }
 
@@ -84,12 +78,7 @@ function orderHasSweets(orderItems = []) {
   return orderItems.some((item) => {
     if (!item) return false;
 
-    const catRaw = (
-      item.category ||
-      item.section ||
-      item.type ||
-      ""
-    )
+    const catRaw = (item.category || item.section || item.type || "")
       .toString()
       .toLowerCase();
 
@@ -108,9 +97,10 @@ function orderHasSweets(orderItems = []) {
     ].some((k) => catRaw.includes(k));
 
     // Name-based: fallback if category is missing / inconsistent
-    const nameLooksSweet = /cake|dessert|ice cream|ice-cream|gelato|baklava|tiramisu|pastry|pudding|sweet/i.test(
-      nameRaw
-    );
+    const nameLooksSweet =
+      /cake|dessert|ice cream|ice-cream|gelato|baklava|tiramisu|pastry|pudding|sweet/i.test(
+        nameRaw
+      );
 
     return categoryIsSweet || nameLooksSweet;
   });

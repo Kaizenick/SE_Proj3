@@ -25,8 +25,8 @@ const ProfilePreferences = () => {
       try {
         const res = await axios.post(
           `${url}/api/user/profile`,
-          {},                          // POST body (empty)
-          { headers: { token } }       // 🔐 send token header
+          {}, // POST body (empty)
+          { headers: { token } } // 🔐 send token header
         );
 
         if (!res.data.success) {

@@ -25,35 +25,20 @@ jobs:
         working-directory: ./proj2/backend
         run: |
           npm ci
-          npm run test:coverage || echo "Backend coverage failed"
+          npm run test:coverage
       
       - name: Frontend Coverage
         working-directory: ./proj2/frontend
         run: |
           npm ci
-          npm run test:coverage || echo "Frontend coverage failed"
+          npm run test:coverage
       
       - name: Admin Coverage
         working-directory: ./proj2/admin
         run: |
           npm ci
-          npm run test:coverage || echo "Admin coverage failed"
+          npm run test:coverage
       
-      # ✅ Upload all coverage reports to Codecov
-      - name: Upload coverage to Codecov
-        uses: codecov/codecov-action@v4
-        with:
-          # TOKEN is optional for public repos; if private, add CODECOV_TOKEN in repo secrets
-          token: ${{ secrets.CODECOV_TOKEN }}
-          files: |
-            proj2/backend/coverage/lcov.info
-            proj2/frontend/coverage/lcov.info
-            proj2/admin/coverage/lcov.info
-          # Optional, but nice to have:
-          flags: backend,frontend,admin
-          fail_ci_if_error: true
-
-      # (Optional) still keep artifact for manual download
       - name: Upload Coverage Reports Artifact
         uses: actions/upload-artifact@v4
         with:

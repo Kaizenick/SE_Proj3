@@ -7,7 +7,7 @@ const Cart = () => {
   const {
     cartItems,
     food_list,
-    addToCart,        // ⭐ make sure this exists in StoreContext
+    addToCart, // ⭐ make sure this exists in StoreContext
     removeFromCart,
     getTotalCartAmount,
     url,
@@ -27,9 +27,7 @@ const Cart = () => {
     }
   };
 
-  const cartItemsWithData = food_list.filter(
-    (item) => cartItems[item._id] > 0
-  );
+  const cartItemsWithData = food_list.filter((item) => cartItems[item._id] > 0);
 
   return (
     <div className="cart">
@@ -38,10 +36,7 @@ const Cart = () => {
         <div className="cart-empty">
           <h2>Your cart is empty</h2>
           <p>Add something tasty to get started.</p>
-          <button
-            className="cart-empty-cta"
-            onClick={() => navigate("/menu")}
-          >
+          <button className="cart-empty-cta" onClick={() => navigate("/menu")}>
             Browse menu
           </button>
         </div>
@@ -76,9 +71,7 @@ const Cart = () => {
                   >
                     −
                   </button>
-                  <span className="cart-qty-value">
-                    {cartItems[item._id]}
-                  </span>
+                  <span className="cart-qty-value">{cartItems[item._id]}</span>
                   <button
                     type="button"
                     className="cart-qty-btn"

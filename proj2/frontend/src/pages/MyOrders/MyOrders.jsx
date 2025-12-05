@@ -106,7 +106,10 @@ const MyOrders = () => {
 
           // User can cancel ONLY when driver has NOT claimed it
           // and status is either "Food Preparing" or "Looking for driver"
-          const userCancellableStatuses = ["food preparing", "looking for driver"];
+          const userCancellableStatuses = [
+            "food preparing",
+            "looking for driver",
+          ];
 
           const canUserCancel =
             userCancellableStatuses.includes(normalizeStatus(order.status)) &&
@@ -115,10 +118,8 @@ const MyOrders = () => {
             !isRedistributedStatus &&
             !isCancelled;
 
-
           // 🔹 price & discount logic
-          const rawAmount =
-            typeof order.amount === "number" ? order.amount : 0;
+          const rawAmount = typeof order.amount === "number" ? order.amount : 0;
 
           const originalAmount =
             typeof order.originalAmount === "number"
@@ -204,20 +205,20 @@ const MyOrders = () => {
                   isDeliveredStatus
                     ? "status-delivered"
                     : isDonatedStatus
-                    ? "status-donated"
-                    : isRedistributedStatus
-                    ? "status-redistributed"
-                    : isCancelled
-                    ? "status-cancelled"
-                    : ""
+                      ? "status-donated"
+                      : isRedistributedStatus
+                        ? "status-redistributed"
+                        : isCancelled
+                          ? "status-cancelled"
+                          : ""
                 }`}
               >
                 Status:&nbsp;
                 {isRedistributedStatus
                   ? "Redistributed"
                   : isDonatedStatus
-                  ? "Donated to shelter"
-                  : order.status || "Unknown"}
+                    ? "Donated to shelter"
+                    : order.status || "Unknown"}
               </p>
 
               {/* Claimed order badge */}
@@ -244,9 +245,7 @@ const MyOrders = () => {
                     {"★".repeat(order.rating).padEnd(5, "☆")}
                   </span>
                   {order.feedback && (
-                    <p className="order-rating-feedback">
-                      “{order.feedback}”
-                    </p>
+                    <p className="order-rating-feedback">“{order.feedback}”</p>
                   )}
                 </div>
               )}
@@ -268,8 +267,8 @@ const MyOrders = () => {
                   {isRedistributedStatus
                     ? "Redistributed"
                     : isCancelled
-                    ? "Cancelled"
-                    : "Cannot cancel"}
+                      ? "Cancelled"
+                      : "Cannot cancel"}
                 </button>
               )}
             </div>

@@ -13,9 +13,7 @@ describe("Order Model", () => {
     const order = new orderModel(orderData);
 
     expect(order.userId.toString()).toBe("507f1f77bcf86cd799439011");
-    expect(order.items).toEqual([
-      { name: "Food 1", price: 10, quantity: 2 },
-    ]);
+    expect(order.items).toEqual([{ name: "Food 1", price: 10, quantity: 2 }]);
     expect(order.amount).toBe(25.99);
     expect(order.address).toEqual({ formatted: "123 Main St" });
 

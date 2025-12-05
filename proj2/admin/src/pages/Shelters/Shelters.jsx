@@ -54,7 +54,7 @@ const Shelters = () => {
         const cancelledForRestaurant = allOrders.filter((o) => {
           //const isCancelled = o.status === "Cancelled";
           const isRedistributable =
-             o.status === "Cancelled" || o.status === "Redistribute";
+            o.status === "Cancelled" || o.status === "Redistribute";
 
           const sameRestaurant = !currentRestaurantId
             ? true

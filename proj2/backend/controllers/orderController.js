@@ -63,10 +63,7 @@ const ALLOWED_TRANSITIONS = {
     STATUS.REDISTRIBUTE,
   ]),
 
-  [STATUS.OUT_FOR_DELIVERY]: new Set([
-    STATUS.DELIVERED,
-    STATUS.REDISTRIBUTE,
-  ]),
+  [STATUS.OUT_FOR_DELIVERY]: new Set([STATUS.DELIVERED, STATUS.REDISTRIBUTE]),
 
   [STATUS.REDISTRIBUTE]: new Set([
     STATUS.PROCESSING,
@@ -147,8 +144,8 @@ const cancelOrder = async (req, res) => {
 
     const current = order.status || STATUS.PROCESSING;
     const userCancelable = new Set([
-      STATUS.PROCESSING,           // Food Preparing
-      STATUS.LOOKING_FOR_DRIVER,   // Admin has posted it, but no driver yet
+      STATUS.PROCESSING, // Food Preparing
+      STATUS.LOOKING_FOR_DRIVER, // Admin has posted it, but no driver yet
     ]);
     if (!userCancelable.has(current))
       return res.json({
@@ -369,8 +366,7 @@ const updateStatus = async (req, res) => {
     }
 
     const order = await orderModel.findById(orderId);
-    if (!order)
-      return res.json({ success: false, message: "Order not found" });
+    if (!order) return res.json({ success: false, message: "Order not found" });
 
     const current = order.status || STATUS.PROCESSING;
 
@@ -390,9 +386,7 @@ const updateStatus = async (req, res) => {
         success: false,
         message:
           `Illegal transition: "${current}" → "${next}". ` +
-          `Allowed: ${
-            allowed && allowed.length ? allowed.join(", ") : "none"
-          }`,
+          `Allowed: ${allowed && allowed.length ? allowed.join(", ") : "none"}`,
       });
     }
 
@@ -477,16 +471,16 @@ const assignShelter = async (req, res) => {
     await order.save();
 
     const shelterAddressLine = shelter.address
-  ? [
-      shelter.address.street,
-      shelter.address.city,
-      shelter.address.state,
-      shelter.address.zipcode,
-      shelter.address.country,
-    ]
-      .filter(Boolean)
-      .join(", ")
-  : "";
+      ? [
+          shelter.address.street,
+          shelter.address.city,
+          shelter.address.state,
+          shelter.address.zipcode,
+          shelter.address.country,
+        ]
+          .filter(Boolean)
+          .join(", ")
+      : "";
 
     await rerouteModel.create({
       orderId: order._id,
@@ -617,15 +611,12 @@ const driverAvailableOrders = async (req, res) => {
   }
 };
 
-
 // List all orders claimed by the currently logged-in driver
 const driverMyOrders = async (req, res) => {
   try {
     const driverId = req.body.userId; // set by authMiddleware
 
-    const orders = await orderModel
-      .find({ driverId })
-      .sort({ date: -1 });
+    const orders = await orderModel.find({ driverId }).sort({ date: -1 });
 
     return res.json({
       success: true,

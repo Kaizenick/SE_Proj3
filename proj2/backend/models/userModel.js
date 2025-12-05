@@ -9,8 +9,8 @@ const userSchema = new mongoose.Schema({
 
   address: {
     formatted: { type: String }, // full human-readable address
-    lat: { type: Number },       // latitude
-    lng: { type: Number },       // longitude
+    lat: { type: Number }, // latitude
+    lng: { type: Number }, // longitude
   },
 
   // 🔹 Veg preference: "any" or "veg-only"
@@ -27,15 +27,15 @@ const userSchema = new mongoose.Schema({
     default: "any",
   },
   isAdmin: {
-      type: Boolean,
-      default: false,
-    },
+    type: Boolean,
+    default: false,
+  },
 
-    //  driver flag (NEW)
-    isDriver: {
-      type: Boolean,
-      default: false,
-    },
+  //  driver flag (NEW)
+  isDriver: {
+    type: Boolean,
+    default: false,
+  },
 });
 
 const userModel = mongoose.models.user || mongoose.model("user", userSchema);

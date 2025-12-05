@@ -10,11 +10,11 @@ import {
   cancelOrder,
   claimOrder,
   assignShelter,
-  rateOrder, 
+  rateOrder,
   driverAvailableOrders,
-  driverMyOrders,     
-  driverClaimOrder,    
-  driverMarkDelivered
+  driverMyOrders,
+  driverClaimOrder,
+  driverMarkDelivered,
 } from "../controllers/orderController.js";
 
 const orderRouter = express.Router();
@@ -34,11 +34,6 @@ orderRouter.post("/rate", authMiddleware, rateOrder);
 orderRouter.get("/driver/available", authMiddleware, driverAvailableOrders);
 orderRouter.get("/driver/my", authMiddleware, driverMyOrders);
 orderRouter.post("/driver/claim", authMiddleware, driverClaimOrder);
-orderRouter.post(
-  "/driver/deliver",
-  authMiddleware,
-  driverMarkDelivered
-);
-
+orderRouter.post("/driver/deliver", authMiddleware, driverMarkDelivered);
 
 export default orderRouter;

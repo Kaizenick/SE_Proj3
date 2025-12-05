@@ -9,7 +9,11 @@ const Footer = () => {
         <div className="footer-content-left">
           <img src={assets.logo} alt="" />
           <p>
-            Turn leftover food into fresh opportunities. ByteBite connects nearby restaurants, students and shelters so cancelled or surplus meals are claimed instead of wasted — often at heavily discounted or zero cost. Eat better, spend less, and help reduce food waste with every bite.
+            Turn leftover food into fresh opportunities. ByteBite connects
+            nearby restaurants, students and shelters so cancelled or surplus
+            meals are claimed instead of wasted — often at heavily discounted or
+            zero cost. Eat better, spend less, and help reduce food waste with
+            every bite.
           </p>
           <div className="footer-social-icons">
             <img src={assets.facebook_icon} alt="" />

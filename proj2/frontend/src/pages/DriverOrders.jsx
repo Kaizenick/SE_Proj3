@@ -76,7 +76,7 @@ const DriverOrders = () => {
       toast.error("Something went wrong while claiming the order");
     }
   };
-    const handleMarkDelivered = async (orderId) => {
+  const handleMarkDelivered = async (orderId) => {
     if (!token) {
       toast.error("Please login as a driver first");
       return;
@@ -181,25 +181,25 @@ const DriverOrders = () => {
             </div>
 
             <div className="driver-order-actions">
-            {showClaimButton && (
-              <button
-                className="claim-order-btn"
-                onClick={() => handleClaim(o._id)}
-              >
-                Claim this order
-              </button>
-            )}
+              {showClaimButton && (
+                <button
+                  className="claim-order-btn"
+                  onClick={() => handleClaim(o._id)}
+                >
+                  Claim this order
+                </button>
+              )}
 
-            {/* In "My orders" tab: allow driver to mark as delivered when Out for delivery */}
-            {!showClaimButton && o.status === "Out for delivery" && (
-              <button
-                className="mark-delivered-btn"
-                onClick={() => handleMarkDelivered(o._id)}
-              >
-                Mark delivered
-              </button>
-            )}
-          </div>
+              {/* In "My orders" tab: allow driver to mark as delivered when Out for delivery */}
+              {!showClaimButton && o.status === "Out for delivery" && (
+                <button
+                  className="mark-delivered-btn"
+                  onClick={() => handleMarkDelivered(o._id)}
+                >
+                  Mark delivered
+                </button>
+              )}
+            </div>
           </li>
         ))}
       </ul>

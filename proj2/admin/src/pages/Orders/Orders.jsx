@@ -168,20 +168,14 @@ const Order = () => {
                 </p>
 
                 <div className="order-item-address">
-                  <p>
-                    {addr.street
-                      ? addr.street + ","
-                      : ""}
-                  </p>
+                  <p>{addr.street ? addr.street + "," : ""}</p>
                   <p>
                     {[addr.city, addr.state, addr.country, addr.zipcode]
                       .filter(Boolean)
                       .join(", ")}
                   </p>
                 </div>
-                {addr.phone && (
-                  <p className="order-item-phone">{addr.phone}</p>
-                )}
+                {addr.phone && <p className="order-item-phone">{addr.phone}</p>}
 
                 {order.status === "Cancelled" && (
                   <div className="shelter-assigned">

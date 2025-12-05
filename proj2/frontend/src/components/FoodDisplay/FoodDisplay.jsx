@@ -24,11 +24,7 @@ const FoodDisplay = ({ category }) => {
     const desc = (item.description || "").toLowerCase();
     const cat = (item.category || "").toLowerCase();
 
-    return (
-      name.includes(query) ||
-      desc.includes(query) ||
-      cat.includes(query)
-    );
+    return name.includes(query) || desc.includes(query) || cat.includes(query);
   });
 
   return (

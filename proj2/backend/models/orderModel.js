@@ -35,10 +35,10 @@ const orderSchema = new mongoose.Schema({
 
   // Updated with enum for stricter validation
   status: {
-  type: String,
-  enum: STATUS_VALUES,
-  default: "Food Preparing",
-},
+    type: String,
+    enum: STATUS_VALUES,
+    default: "Food Preparing",
+  },
 
   date: { type: Date, default: Date.now },
   payment: { type: Boolean, default: false },

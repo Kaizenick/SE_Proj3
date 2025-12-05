@@ -1,7 +1,6 @@
 import shelterModel from "../models/shelterModel.js";
 import bcrypt from "bcryptjs";
 
-
 /**
  * Seeds the database with preset shelter data if the collection is empty
  * Inserts 8 default shelters with contact information and addresses
@@ -135,7 +134,12 @@ export const seedShelters = async (_req, res) => {
     ];
 
     await shelterModel.insertMany(seed);
-    res.json({ success: true, message: "Shelters seeded", count: seed.length, defaultPassword: plainPassword});
+    res.json({
+      success: true,
+      message: "Shelters seeded",
+      count: seed.length,
+      defaultPassword: plainPassword,
+    });
   } catch (e) {
     console.log(e);
     res.json({ success: false, message: "Error seeding shelters" });

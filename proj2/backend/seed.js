@@ -70,7 +70,7 @@ const shelters = [
   {
     name: "City Shelter – Raleigh",
     contactEmail: "john.smith@cityshelter.org",
-    password: "shelter123",   // Will be hashed by pre-save middleware
+    password: "shelter123", // Will be hashed by pre-save middleware
     contactName: "John Smith",
     contactPhone: "+1 919 555 0111",
     capacity: 200,

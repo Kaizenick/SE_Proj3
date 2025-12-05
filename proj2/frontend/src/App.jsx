@@ -16,7 +16,7 @@ import DriverRegister from "./pages/DriverRegister.jsx";
 import DriverLogin from "./pages/DriverLogin.jsx";
 import DriverOrders from "./pages/DriverOrders.jsx";
 import ProtectedRoute from "./components/ProtectedRoute";
-import Profile from "./pages/Profile/Profile";   // ⭐ NEW
+import Profile from "./pages/Profile/Profile"; // ⭐ NEW
 
 const App = () => {
   const [showLogin, setShowLogin] = useState(false);

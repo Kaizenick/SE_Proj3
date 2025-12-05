@@ -95,7 +95,7 @@ describe("Order placement controllers", () => {
       name: "User A",
       email: "a@example.com",
       password: "pass",
-      cartData: { "1": 2 },
+      cartData: { 1: 2 },
     });
 
     const req = createMockReq({
@@ -129,7 +129,7 @@ describe("Order placement controllers", () => {
       name: "User B",
       email: "b@example.com",
       password: "pass",
-      cartData: { "2": 3 },
+      cartData: { 2: 3 },
     });
 
     const req = createMockReq({

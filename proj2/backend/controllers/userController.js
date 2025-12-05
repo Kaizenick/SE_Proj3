@@ -81,7 +81,7 @@ const registerUser = async (req, res) => {
       email,
       password: hashedPassword,
       dietPreference,
-      sugarPreference, 
+      sugarPreference,
       ...(address && {
         address: {
           formatted: address.formatted,

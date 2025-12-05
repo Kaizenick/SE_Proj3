@@ -91418,7 +91418,6 @@ function bidiFactory() {
               currentRun &&
               currentRun._endsWithIsolInit &&
               (pdiIndex = isolationPairs.get(currentRun._end)) != null;
-
             ) {
               for (var i$4 = runIdx + 1; i$4 < levelRuns.length; i$4++) {
                 if (levelRuns[i$4]._start === pdiIndex) {
@@ -92620,7 +92619,6 @@ function createTypesetter(fontParser, bidi, config2) {
             for (
               let i4 = lineGlyphCount;
               i4-- && line.glyphAt(i4).glyphObj.isWhitespace;
-
             ) {
               trailingWhitespaceCount++;
             }
@@ -93876,7 +93874,6 @@ function typrFactory() {
               t4 += 2 * h,
               o2.glyphIdArray = [];
             t4 < n2 + s2;
-
           )
             (o2.glyphIdArray.push(a7.readUshort(r3, t4)), (t4 += 2));
           return o2;
@@ -95133,7 +95130,6 @@ function typrFactory() {
               _ = 0,
               C = { val: 0, size: 0 };
             u < r3.length;
-
           ) {
             e2.CFF.getCharString(r3, u, C);
             var x = C.val;
@@ -95551,7 +95547,6 @@ function woff2otfFactory() {
                         ? ((N = 3 + L(r3, k2, 7)), (k2 += 3))
                         : 18 == I && ((N = 11 + L(r3, k2, 127)), (k2 += 7));
                     N--;
-
                   )
                     F[q++] = K;
                 }
@@ -95661,7 +95656,6 @@ function woff2otfFactory() {
             },
             u2 = 0;
           Math.pow(2, u2) <= f4.numTables;
-
         )
           u2++;
         u2--;
@@ -108844,9 +108838,8 @@ function FaceLandmarker({
 }) {
   const opts = JSON.stringify(options);
   const faceLandmarker = suspend(async () => {
-    const { FilesetResolver, FaceLandmarker: FaceLandmarker2 } = await import(
-      "./vision_bundle-DIJDKRYK.js"
-    );
+    const { FilesetResolver, FaceLandmarker: FaceLandmarker2 } =
+      await import("./vision_bundle-DIJDKRYK.js");
     const vision = await FilesetResolver.forVisionTasks(basePath);
     return FaceLandmarker2.createFromOptions(vision, options);
   }, [basePath, opts]);
@@ -121808,7 +121801,7 @@ function md5ToHexEncodedArray(input) {
   const length32 = input.length * 32;
   const hexTab = "0123456789abcdef";
   for (let i4 = 0; i4 < length32; i4 += 8) {
-    const x = (input[i4 >> 5] >>> i4 % 32) & 255;
+    const x = (input[i4 >> 5] >>> (i4 % 32)) & 255;
     const hex = parseInt(
       hexTab.charAt((x >>> 4) & 15) + hexTab.charAt(x & 15),
       16
@@ -121821,7 +121814,7 @@ function getOutputLength(inputLength8) {
   return (((inputLength8 + 64) >>> 9) << 4) + 14 + 1;
 }
 function wordsToMd5(x, len) {
-  x[len >> 5] |= 128 << len % 32;
+  x[len >> 5] |= 128 << (len % 32);
   x[getOutputLength(len) - 1] = len;
   let a6 = 1732584193;
   let b5 = -271733879;
@@ -121910,7 +121903,7 @@ function bytesToWords(input) {
   const length8 = input.length * 8;
   const output = new Uint32Array(getOutputLength(length8));
   for (let i4 = 0; i4 < length8; i4 += 8) {
-    output[i4 >> 5] |= (input[i4 / 8] & 255) << i4 % 32;
+    output[i4 >> 5] |= (input[i4 / 8] & 255) << (i4 % 32);
   }
   return output;
 }

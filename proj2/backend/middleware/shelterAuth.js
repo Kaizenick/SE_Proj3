@@ -14,7 +14,9 @@ export const shelterAuth = async (req, res, next) => {
 
     const shelter = await Shelter.findById(decoded.shelterId);
     if (!shelter)
-      return res.status(404).json({ success: false, message: "Shelter not found" });
+      return res
+        .status(404)
+        .json({ success: false, message: "Shelter not found" });
 
     req.shelter = shelter;
     next();

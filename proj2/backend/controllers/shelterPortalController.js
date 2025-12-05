@@ -10,11 +10,15 @@ export const loginShelter = async (req, res) => {
     const shelter = await Shelter.findOne({ contactEmail: email });
 
     if (!shelter)
-      return res.status(404).json({ success: false, message: "Shelter not found" });
+      return res
+        .status(404)
+        .json({ success: false, message: "Shelter not found" });
 
     const isMatch = await shelter.matchPassword(password);
     if (!isMatch)
-      return res.status(401).json({ success: false, message: "Wrong password" });
+      return res
+        .status(401)
+        .json({ success: false, message: "Wrong password" });
 
     const token = jwt.sign(
       { role: "shelter", shelterId: shelter._id },
@@ -28,30 +32,25 @@ export const loginShelter = async (req, res) => {
   }
 };
 
-
 // ----------------------- PROFILE "ME" -----------------------
 export const getShelterProfile = async (req, res) => {
   res.json({ success: true, shelter: req.shelter });
 };
-
 
 // ----------------------- UPDATE PROFILE -----------------------
 export const updateShelterProfile = async (req, res) => {
   try {
     const updates = req.body;
 
-    const updated = await Shelter.findByIdAndUpdate(
-      req.shelter._id,
-      updates,
-      { new: true }
-    );
+    const updated = await Shelter.findByIdAndUpdate(req.shelter._id, updates, {
+      new: true,
+    });
 
     res.json({ success: true, shelter: updated });
   } catch (e) {
     res.status(500).json({ success: false, message: e.message });
   }
 };
-
 
 // ----------------------- DASHBOARD STATS -----------------------
 export const getDashboardStats = async (req, res) => {
@@ -60,17 +59,17 @@ export const getDashboardStats = async (req, res) => {
 
     const totalDonations = await Reroute.countDocuments({
       shelterId,
-      status: "accepted"
+      status: "accepted",
     });
 
     const pending = await Reroute.countDocuments({
       shelterId,
-      status: "pending"
+      status: "pending",
     });
 
     const totalValueAgg = await Reroute.aggregate([
       { $match: { shelterId, status: "accepted" } },
-      { $group: { _id: null, total: { $sum: "$totalAmount" } } }
+      { $group: { _id: null, total: { $sum: "$totalAmount" } } },
     ]);
 
     const totalValue = totalValueAgg[0]?.total || 0;
@@ -81,13 +80,12 @@ export const getDashboardStats = async (req, res) => {
         totalDonations,
         totalValue,
         pending,
-      }
+      },
     });
   } catch (e) {
     res.status(500).json({ success: false, message: e.message });
   }
 };
-
 
 // ----------------------- PENDING ORDERS -----------------------
 export const getPendingOrders = async (req, res) => {
@@ -102,7 +100,6 @@ export const getPendingOrders = async (req, res) => {
     res.status(500).json({ success: false, message: e.message });
   }
 };
-
 
 // ----------------------- ACCEPT ORDER -----------------------
 export const acceptOrder = async (req, res) => {
@@ -119,7 +116,6 @@ export const acceptOrder = async (req, res) => {
   }
 };
 
-
 // ----------------------- REJECT ORDER -----------------------
 export const rejectOrder = async (req, res) => {
   try {
@@ -135,13 +131,12 @@ export const rejectOrder = async (req, res) => {
   }
 };
 
-
 // ----------------------- DONATION HISTORY -----------------------
 export const getDonationHistory = async (req, res) => {
   try {
     const donations = await Reroute.find({
       shelterId: req.shelter._id,
-      status: "accepted"
+      status: "accepted",
     }).populate("orderId");
 
     res.json({ success: true, donations });
