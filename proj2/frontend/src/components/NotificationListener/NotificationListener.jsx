@@ -3,8 +3,8 @@ import axios from "axios";
 import { useSocket } from "../../Context/SocketContext";
 import { StoreContext } from "../../Context/StoreContext";
 import toast from "react-hot-toast";
+import { useLocation } from "react-router-dom";
 import "./NotificationListener.css";
-
 /**
  * NotificationListener - Component that listens for order cancellation notifications via Socket.IO
  * Displays toast notifications when orders become available for claiming
@@ -14,6 +14,8 @@ import "./NotificationListener.css";
 const NotificationListener = () => {
   const socket = useSocket();
   const { token, currency, url } = useContext(StoreContext);
+  const location = useLocation();
+  const isDriverRoute = location.pathname.startsWith("/driver");
 
   /**
    * Extracts user ID from JWT token
@@ -64,6 +66,7 @@ const NotificationListener = () => {
   };
 
   useEffect(() => {
+    if (isDriverRoute) return;
     if (socket && token) {
       const userId = getUserId();
       if (userId) {
@@ -71,10 +74,10 @@ const NotificationListener = () => {
         socket.emit("register", userId);
       }
     }
-  }, [socket, token]);
+  }, [socket, token, isDriverRoute]);
 
   useEffect(() => {
-    if (!socket || !token) return;
+    if (!socket || !token || isDriverRoute) return;
 
     const handleOrderCancelled = (data) => {
       console.log("Order cancelled notification received:", data);
@@ -153,7 +156,7 @@ const NotificationListener = () => {
     return () => {
       socket.off("orderCancelled", handleOrderCancelled);
     };
-  }, [socket, token, currency, url]);
+  }, [socket, token, currency, url, isDriverRoute]);
 
   return null;
 };
