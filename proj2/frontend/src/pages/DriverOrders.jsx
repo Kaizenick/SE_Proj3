@@ -76,6 +76,33 @@ const DriverOrders = () => {
       toast.error("Something went wrong while claiming the order");
     }
   };
+    const handleMarkDelivered = async (orderId) => {
+    if (!token) {
+      toast.error("Please login as a driver first");
+      return;
+    }
+    try {
+      const res = await axios.post(
+        `${url}/api/order/driver/deliver`,
+        { orderId },
+        authHeader
+      );
+
+      if (res.data.success) {
+        const updated = res.data.data;
+        // Update myOrders list in state
+        setMyOrders((prev) =>
+          prev.map((o) => (o._id === updated._id ? updated : o))
+        );
+        toast.success("Order marked as delivered");
+      } else {
+        toast.error(res.data.message || "Could not mark as delivered");
+      }
+    } catch (err) {
+      console.error("Error marking as delivered", err);
+      toast.error("Something went wrong while marking as delivered");
+    }
+  };
 
   // Map backend status string to CSS class
   const getStatusClass = (statusRaw) => {
@@ -153,16 +180,26 @@ const DriverOrders = () => {
               )}
             </div>
 
+            <div className="driver-order-actions">
             {showClaimButton && (
-              <div>
-                <button
-                  className="claim-order-btn"
-                  onClick={() => handleClaim(o._id)}
-                >
-                  Claim this order
-                </button>
-              </div>
+              <button
+                className="claim-order-btn"
+                onClick={() => handleClaim(o._id)}
+              >
+                Claim this order
+              </button>
             )}
+
+            {/* In "My orders" tab: allow driver to mark as delivered when Out for delivery */}
+            {!showClaimButton && o.status === "Out for delivery" && (
+              <button
+                className="mark-delivered-btn"
+                onClick={() => handleMarkDelivered(o._id)}
+              >
+                Mark delivered
+              </button>
+            )}
+          </div>
           </li>
         ))}
       </ul>

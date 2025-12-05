@@ -15,7 +15,9 @@ const MyOrders = () => {
   const [selectedOrderForRating, setSelectedOrderForRating] = useState(null);
   const [showRatingModal, setShowRatingModal] = useState(false);
 
-  // Decode token to get userId (if not available in StoreContext)
+  // (Optional) Decode token to get userId, but we don't actually need it
+  // for cancel logic because this page already fetches only the
+  // logged-in user's orders from the backend.
   const getUserId = () => {
     if (!token) return null;
     try {
@@ -29,12 +31,16 @@ const MyOrders = () => {
   const currentUserId = getUserId();
 
   const fetchOrders = async () => {
-    const response = await axios.post(
-      url + "/api/order/userorders",
-      {},
-      { headers: { token } }
-    );
-    setData(response.data.data);
+    try {
+      const response = await axios.post(
+        url + "/api/order/userorders",
+        {},
+        { headers: { token } }
+      );
+      setData(response.data.data || []);
+    } catch (err) {
+      console.error("Error fetching user orders", err);
+    }
   };
 
   const cancelOrder = async (orderId) => {
@@ -80,51 +86,35 @@ const MyOrders = () => {
     }
   }, [socket]);
 
-  // Calculate progress percentage based on order creation time
-  const calculateProgress = (createdAt) => {
-    const createdTime = new Date(createdAt).getTime();
-    const currentTime = Date.now();
-    const twoMinutes = 2 * 60 * 1000;
-    const elapsed = currentTime - createdTime;
-    const progress = Math.min((elapsed / twoMinutes) * 100, 100);
-    return progress;
-  };
-
-  // Update progress bars every second (for non-delivered orders)
-  const [, forceUpdate] = useState();
-  useEffect(() => {
-    const interval = setInterval(() => {
-      forceUpdate({});
-    }, 1000);
-    return () => clearInterval(interval);
-  }, []);
+  // Old progress-bar logic removed / commented out
+  // const calculateProgress = (createdAt) => { ... }
+  // const [, forceUpdate] = useState();
+  // useEffect(() => { ... }, []);
 
   return (
     <div className="my-orders">
       <h2>My Orders</h2>
       <div className="container">
         {data.map((order, index) => {
-          let progress = calculateProgress(order.date);
-
-          let isCancelled = false;
-          if (order.claimedBy?.toString() === currentUserId) {
-            isCancelled = false;
-          } else if (
-            order.userId.toString() === currentUserId &&
-            order.status === "Claimed"
-          ) {
-            isCancelled = true;
-          } else if (order.status === "Redistribute") {
-            isCancelled = true;
-          }
-
           const isDeliveredStatus = order.status === "Delivered";
           const isDonatedStatus = order.status === "Donated";
+          const isRedistributedStatus = order.status === "Redistribute";
+          const isCancelled = order.status === "Cancelled";
 
-          // if backend says Delivered or Donated, force 100% progress
-          if (isDeliveredStatus || isDonatedStatus) {
-            progress = 100;
-          }
+          // Normalize status to be safe against case/whitespace differences
+          const normalizeStatus = (s) => (s || "").toLowerCase().trim();
+
+          // User can cancel ONLY when driver has NOT claimed it
+          // and status is either "Food Preparing" or "Looking for driver"
+          const userCancellableStatuses = ["food preparing", "looking for driver"];
+
+          const canUserCancel =
+            userCancellableStatuses.includes(normalizeStatus(order.status)) &&
+            !isDeliveredStatus &&
+            !isDonatedStatus &&
+            !isRedistributedStatus &&
+            !isCancelled;
+
 
           // 🔹 price & discount logic
           const rawAmount =
@@ -156,6 +146,8 @@ const MyOrders = () => {
               }`}
             >
               <img src={assets.parcel_icon} alt="" />
+
+              {/* Items list */}
               <p>
                 {order.items.map((item, i) => {
                   if (i === order.items.length - 1) {
@@ -206,37 +198,27 @@ const MyOrders = () => {
 
               <p>Items: {order.items.length}</p>
 
-              {isCancelled ? (
-                <>
-                  <div className="progress-container cancelled">
-                    <div
-                      className="progress-bar cancelled"
-                      style={{ width: "100%" }}
-                    ></div>
-                  </div>
-                  <p className="progress-text cancelled">Order Cancelled</p>
-                </>
-              ) : (
-                <>
-                  <div className="progress-container">
-                    <div
-                      className={`progress-bar ${
-                        isDonatedStatus ? "donated" : ""
-                      }`}
-                      style={{ width: `${progress}%` }}
-                    ></div>
-                  </div>
-                  <p className="progress-text">
-                    {isDonatedStatus
-                      ? "Donated to shelter"
-                      : isDeliveredStatus
-                      ? "Delivered"
-                      : progress >= 60
-                      ? "Out for Delivery"
-                      : "Preparing Food"}
-                  </p>
-                </>
-              )}
+              {/* Simple status line instead of progress bar */}
+              <p
+                className={`order-status-text ${
+                  isDeliveredStatus
+                    ? "status-delivered"
+                    : isDonatedStatus
+                    ? "status-donated"
+                    : isRedistributedStatus
+                    ? "status-redistributed"
+                    : isCancelled
+                    ? "status-cancelled"
+                    : ""
+                }`}
+              >
+                Status:&nbsp;
+                {isRedistributedStatus
+                  ? "Redistributed"
+                  : isDonatedStatus
+                  ? "Donated to shelter"
+                  : order.status || "Unknown"}
+              </p>
 
               {/* Claimed order badge */}
               {isClaimedOrder && !isCancelled && (
@@ -269,22 +251,27 @@ const MyOrders = () => {
                 </div>
               )}
 
-              <button
-                onClick={() => cancelOrder(order._id)}
-                disabled={isDeliveredStatus || isDonatedStatus || isCancelled}
-                style={{
-                  opacity:
-                    isDeliveredStatus || isDonatedStatus || isCancelled
-                      ? 0.5
-                      : 1,
-                  cursor:
-                    isDeliveredStatus || isDonatedStatus || isCancelled
-                      ? "not-allowed"
-                      : "pointer",
-                }}
-              >
-                {isCancelled ? "Cancelled" : "Cancel Order"}
-              </button>
+              {/* Cancel button logic */}
+              {canUserCancel ? (
+                <button
+                  onClick={() => cancelOrder(order._id)}
+                  className="cancel-order-btn"
+                >
+                  Cancel order
+                </button>
+              ) : (
+                <button
+                  className="cancel-order-btn"
+                  disabled
+                  style={{ opacity: 0.5, cursor: "not-allowed" }}
+                >
+                  {isRedistributedStatus
+                    ? "Redistributed"
+                    : isCancelled
+                    ? "Cancelled"
+                    : "Cannot cancel"}
+                </button>
+              )}
             </div>
           );
         })}
