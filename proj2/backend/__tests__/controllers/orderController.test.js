@@ -79,6 +79,7 @@ afterEach(async () => {
     shelterModel.deleteMany({}),
     rerouteModel.deleteMany({}),
   ]);
+  jest.restoreAllMocks();
 });
 
 afterAll(async () => {
@@ -95,7 +96,7 @@ describe("Order placement controllers", () => {
       name: "User A",
       email: "a@example.com",
       password: "pass",
-      cartData: { 1: 2 },
+      cartData: { "1": 2 },
     });
 
     const req = createMockReq({
@@ -129,7 +130,7 @@ describe("Order placement controllers", () => {
       name: "User B",
       email: "b@example.com",
       password: "pass",
-      cartData: { 2: 3 },
+      cartData: { "2": 3 },
     });
 
     const req = createMockReq({
@@ -185,6 +186,25 @@ describe("Order listing controllers", () => {
     expect(res.body.data).toHaveLength(2);
   });
 
+  it("listOrders should handle database errors", async () => {
+    jest.spyOn(console, "log").mockImplementation(() => {});
+
+    const sortMock = jest
+      .fn()
+      .mockRejectedValueOnce(new Error("DB error"));
+    const spy = jest
+      .spyOn(orderModel, "find")
+      .mockReturnValue({ sort: sortMock });
+
+    const req = createMockReq({});
+    const res = createMockRes();
+    await listOrders(req, res);
+
+    expect(spy).toHaveBeenCalledWith({});
+    expect(sortMock).toHaveBeenCalledWith({ date: -1 });
+    expect(res.body).toEqual({ success: false, message: "Error" });
+  });
+
   it("userOrders should return orders for user & claimedBy", async () => {
     await orderModel.create([
       {
@@ -216,6 +236,27 @@ describe("Order listing controllers", () => {
     expect(res.body.data).toHaveLength(2);
     const ids = res.body.data.map((o) => o.userId || o.claimedBy);
     expect(ids).toContain("user-1");
+  });
+
+  it("userOrders should handle database errors", async () => {
+    jest.spyOn(console, "error").mockImplementation(() => {});
+
+    const sortMock = jest
+      .fn()
+      .mockRejectedValueOnce(new Error("DB error"));
+    const spy = jest
+      .spyOn(orderModel, "find")
+      .mockReturnValue({ sort: sortMock });
+
+    const req = createMockReq({ userId: "user-1" });
+    const res = createMockRes();
+    await userOrders(req, res);
+
+    expect(spy).toHaveBeenCalledWith({
+      $or: [{ userId: "user-1" }, { claimedBy: "user-1" }],
+    });
+    expect(sortMock).toHaveBeenCalledWith({ date: -1 });
+    expect(res.body).toEqual({ success: false, message: "Error" });
   });
 });
 
@@ -266,6 +307,47 @@ describe("Order status & verification", () => {
     expect(res.body.message).toMatch(/Illegal transition/);
   });
 
+  it("updateStatus should reject invalid status values", async () => {
+    const order = await orderModel.create({
+      userId: "u1",
+      items: [],
+      amount: 10,
+      address: { formatted: "A" },
+      status: "Food Preparing",
+    });
+
+    const req = createMockReq({
+      orderId: order._id.toString(),
+      status: "Totally Invalid Status",
+    });
+    const res = createMockRes();
+
+    await updateStatus(req, res);
+    expect(res.body.success).toBe(false);
+    expect(res.body.message).toMatch(/Invalid status value/);
+  });
+
+  it("updateStatus should no-op when status is unchanged", async () => {
+    const order = await orderModel.create({
+      userId: "u1",
+      items: [],
+      amount: 10,
+      address: { formatted: "A" },
+      status: "Food Preparing",
+    });
+
+    const req = createMockReq({
+      orderId: order._id.toString(),
+      status: "Food Preparing",
+    });
+    const res = createMockRes();
+
+    await updateStatus(req, res);
+    expect(res.body.success).toBe(true);
+    expect(res.body.message).toBe("Status unchanged");
+    expect(res.body.data._id.toString()).toBe(order._id.toString());
+  });
+
   it("verifyOrder: success=true should mark payment true", async () => {
     const order = await orderModel.create({
       userId: "u1",
@@ -310,6 +392,26 @@ describe("Order status & verification", () => {
     const deleted = await orderModel.findById(order._id);
     expect(deleted).toBeNull();
   });
+
+  it("verifyOrder should handle database errors", async () => {
+    jest.spyOn(console, "log").mockImplementation(() => {});
+
+    const fakeId = new mongoose.Types.ObjectId().toString();
+    const spy = jest
+      .spyOn(orderModel, "findByIdAndUpdate")
+      .mockRejectedValueOnce(new Error("DB error"));
+
+    const req = createMockReq({
+      orderId: fakeId,
+      success: "true",
+    });
+    const res = createMockRes();
+
+    await verifyOrder(req, res);
+
+    expect(spy).toHaveBeenCalled();
+    expect(res.body).toEqual({ success: false, message: "Not Verified" });
+  });
 });
 
 // ----------------------------
@@ -346,6 +448,29 @@ describe("Order cancellation & claiming", () => {
     expect(arg.foodCategory).toBe("veg");
   });
 
+  it("cancelOrder should work even if no queueNotification handler is set", async () => {
+    const order = await orderModel.create({
+      userId: "user-1",
+      items: [{ name: "Item", price: 10, quantity: 1 }],
+      amount: 10,
+      address: { formatted: "A" },
+      status: "Food Preparing",
+    });
+
+    const req = createMockReq({
+      orderId: order._id.toString(),
+      userId: "user-1",
+    });
+    const res = createMockRes();
+
+    await cancelOrder(req, res);
+
+    expect(res.body.success).toBe(true);
+    expect(res.body.message).toMatch(/cancelled successfully/i);
+    const updated = await orderModel.findById(order._id);
+    expect(updated.status).toBe("Redistribute");
+  });
+
   it("cancelOrder should reject unauthorized user", async () => {
     const order = await orderModel.create({
       userId: "user-1",
@@ -364,6 +489,42 @@ describe("Order cancellation & claiming", () => {
     await cancelOrder(req, res);
     expect(res.body.success).toBe(false);
     expect(res.body.message).toBe("Unauthorized");
+  });
+
+  it("cancelOrder should reject when status is not cancelable", async () => {
+    const order = await orderModel.create({
+      userId: "user-1",
+      items: [],
+      amount: 10,
+      address: { formatted: "A" },
+      status: "Out for delivery",
+    });
+
+    const req = createMockReq({
+      orderId: order._id.toString(),
+      userId: "user-1",
+    });
+    const res = createMockRes();
+
+    await cancelOrder(req, res);
+
+    expect(res.body.success).toBe(false);
+    expect(res.body.message).toMatch(/Cannot cancel when status is/);
+  });
+
+  it("cancelOrder should return error when order not found", async () => {
+    const fakeId = new mongoose.Types.ObjectId().toString();
+
+    const req = createMockReq({
+      orderId: fakeId,
+      userId: "user-1",
+    });
+    const res = createMockRes();
+
+    await cancelOrder(req, res);
+
+    expect(res.body.success).toBe(false);
+    expect(res.body.message).toBe("Order not found");
   });
 
   it("claimOrder should apply discount, transfer ownership, and reset status", async () => {
@@ -406,6 +567,93 @@ describe("Order cancellation & claiming", () => {
     expect(updated.claimedBy.toString()).toBe(claimer._id.toString());
     expect(updated.status).toBe("Food Preparing");
   });
+
+  it("claimOrder should set originalAmount if missing on legacy orders", async () => {
+    const originalUser = await userModel.create({
+      name: "Old User",
+      email: "old@example.com",
+      password: "x",
+    });
+    const claimer = await userModel.create({
+      name: "New User",
+      email: "new@example.com",
+      password: "x",
+    });
+
+    const created = await orderModel.create({
+      userId: originalUser._id.toString(),
+      items: [{ name: "Food", price: 30, quantity: 1 }],
+      amount: 900,
+      address: { formatted: "A", name: "Old Name" },
+      status: "Redistribute",
+    });
+
+    // simulate legacy doc with no originalAmount
+    await orderModel.updateOne(
+      { _id: created._id },
+      { $unset: { originalAmount: "" } }
+    );
+
+    const req = createMockReq({
+      orderId: created._id.toString(),
+      userId: claimer._id.toString(),
+    });
+    const res = createMockRes();
+
+    await claimOrder(req, res);
+
+    const updated = await orderModel.findById(created._id);
+    expect(updated.originalAmount).toBe(900);
+    expect(updated.amount).toBe(Math.round(900 * (2 / 3)));
+  });
+
+  it("claimOrder should reject when order not available for claim", async () => {
+    const user = await userModel.create({
+      name: "User",
+      email: "u@example.com",
+      password: "x",
+    });
+
+    const order = await orderModel.create({
+      userId: user._id.toString(),
+      items: [],
+      amount: 100,
+      address: { formatted: "A" },
+      status: "Food Preparing",
+    });
+
+    const req = createMockReq({
+      orderId: order._id.toString(),
+      userId: user._id.toString(),
+    });
+    const res = createMockRes();
+
+    await claimOrder(req, res);
+
+    expect(res.body.success).toBe(false);
+    expect(res.body.message).toBe("Order not available for claim");
+  });
+
+  it("claimOrder should return error when order not found", async () => {
+    const user = await userModel.create({
+      name: "User",
+      email: "u@example.com",
+      password: "x",
+    });
+
+    const fakeId = new mongoose.Types.ObjectId().toString();
+
+    const req = createMockReq({
+      orderId: fakeId,
+      userId: user._id.toString(),
+    });
+    const res = createMockRes();
+
+    await claimOrder(req, res);
+
+    expect(res.body.success).toBe(false);
+    expect(res.body.message).toBe("Order not found");
+  });
 });
 
 // ----------------------------
@@ -415,7 +663,7 @@ describe("assignShelter (donation flow)", () => {
   it("should mark order as donated and create reroute record", async () => {
     const shelter = await shelterModel.create({
       name: "Helping Hands",
-      password: "shelter-pass", // ✅ required by schema
+      password: "shelter-pass",
       contactEmail: "help@example.com",
       contactPhone: "123",
       address: {
@@ -455,6 +703,149 @@ describe("assignShelter (donation flow)", () => {
     expect(reroutes).toHaveLength(1);
     expect(reroutes[0].shelterName).toBe("Helping Hands");
     expect(reroutes[0].status).toBe("pending");
+  });
+
+  it("should require orderId and shelterId", async () => {
+    const req = createMockReq({});
+    const res = createMockRes();
+
+    await assignShelter(req, res);
+
+    expect(res.body.success).toBe(false);
+    expect(res.body.message).toBe("orderId and shelterId are required");
+  });
+
+  it("should return error when order not found", async () => {
+    const shelter = await shelterModel.create({
+      name: "Helping Hands",
+      password: "shelter-pass",
+      contactEmail: "help@example.com",
+      contactPhone: "123",
+      address: {
+        street: "1 Aid St",
+        city: "Raleigh",
+        state: "NC",
+        zipcode: "27601",
+        country: "United States",
+      },
+    });
+
+    const fakeId = new mongoose.Types.ObjectId().toString();
+
+    const req = createMockReq({
+      orderId: fakeId,
+      shelterId: shelter._id.toString(),
+    });
+    const res = createMockRes();
+
+    await assignShelter(req, res);
+
+    expect(res.body.success).toBe(false);
+    expect(res.body.message).toBe("Order not found");
+  });
+
+  it("should return error when shelter not found", async () => {
+    const order = await orderModel.create({
+      userId: "u1",
+      items: [],
+      amount: 10,
+      address: { formatted: "A" },
+      status: "Redistribute",
+    });
+
+    const fakeShelterId = new mongoose.Types.ObjectId().toString();
+
+    const req = createMockReq({
+      orderId: order._id.toString(),
+      shelterId: fakeShelterId,
+    });
+    const res = createMockRes();
+
+    await assignShelter(req, res);
+
+    expect(res.body.success).toBe(false);
+    expect(res.body.message).toBe("Shelter not found");
+  });
+
+  it("should reject when order status is not Redistribute or Cancelled", async () => {
+    const shelter = await shelterModel.create({
+      name: "Helping Hands",
+      password: "shelter-pass",
+      contactEmail: "help@example.com",
+      contactPhone: "123",
+      address: {
+        street: "1 Aid St",
+        city: "Raleigh",
+        state: "NC",
+        zipcode: "27601",
+        country: "United States",
+      },
+    });
+
+    const order = await orderModel.create({
+      userId: "u1",
+      items: [],
+      amount: 10,
+      address: { formatted: "A" },
+      status: "Food Preparing",
+    });
+
+    const req = createMockReq({
+      orderId: order._id.toString(),
+      shelterId: shelter._id.toString(),
+    });
+    const res = createMockRes();
+
+    await assignShelter(req, res);
+
+    expect(res.body.success).toBe(false);
+    expect(res.body.message).toMatch(
+      /Only "Redistribute" or "Cancelled" can be assigned/
+    );
+  });
+
+  it("should short-circuit if shelter already assigned", async () => {
+    const shelter = await shelterModel.create({
+      name: "Helping Hands",
+      password: "shelter-pass",
+      contactEmail: "help@example.com",
+      contactPhone: "123",
+      address: {
+        street: "1 Aid St",
+        city: "Raleigh",
+        state: "NC",
+        zipcode: "27601",
+        country: "United States",
+      },
+    });
+
+    const mockOrder = {
+      _id: new mongoose.Types.ObjectId(),
+      shelter: {
+        id: shelter._id.toString(),
+        name: shelter.name,
+      },
+      status: "Redistribute",
+    };
+
+    const findSpy = jest
+      .spyOn(orderModel, "findById")
+      .mockResolvedValue(mockOrder);
+
+    const req = createMockReq({
+      orderId: mockOrder._id.toString(),
+      shelterId: shelter._id.toString(),
+    });
+    const res = createMockRes();
+
+    await assignShelter(req, res);
+
+    expect(findSpy).toHaveBeenCalled();
+    expect(res.body.success).toBe(true);
+    expect(res.body.alreadyAssigned).toBe(true);
+
+    const reroutes = await rerouteModel.find({});
+    expect(reroutes).toHaveLength(0);
   });
 });
 
@@ -528,6 +919,105 @@ describe("rateOrder", () => {
     expect(res.body.success).toBe(false);
     expect(res.body.message).toMatch(/only rate your own orders/i);
   });
+
+  it("should require orderId and rating", async () => {
+    const user = await userModel.create({
+      name: "User",
+      email: "u@example.com",
+      password: "x",
+    });
+
+    const req = createMockReq({
+      userId: user._id.toString(),
+      // missing orderId and rating
+    });
+    const res = createMockRes();
+
+    await rateOrder(req, res);
+
+    expect(res.body.success).toBe(false);
+    expect(res.body.message).toBe("orderId and rating are required");
+  });
+
+  it("should validate rating range 1-5", async () => {
+    const user = await userModel.create({
+      name: "Rater",
+      email: "rate@example.com",
+      password: "x",
+    });
+
+    const order = await orderModel.create({
+      userId: user._id.toString(),
+      items: [],
+      amount: 10,
+      address: { formatted: "Addr" },
+      status: "Delivered",
+    });
+
+    const req = createMockReq({
+      userId: user._id.toString(),
+      orderId: order._id.toString(),
+      rating: 6,
+    });
+    const res = createMockRes();
+
+    await rateOrder(req, res);
+
+    expect(res.body.success).toBe(false);
+    expect(res.body.message).toBe(
+      "Rating must be a number between 1 and 5"
+    );
+  });
+
+  it("should require Delivered status before rating", async () => {
+    const user = await userModel.create({
+      name: "Rater",
+      email: "rate@example.com",
+      password: "x",
+    });
+
+    const order = await orderModel.create({
+      userId: user._id.toString(),
+      items: [],
+      amount: 10,
+      address: { formatted: "Addr" },
+      status: "Food Preparing",
+    });
+
+    const req = createMockReq({
+      userId: user._id.toString(),
+      orderId: order._id.toString(),
+      rating: 5,
+    });
+    const res = createMockRes();
+
+    await rateOrder(req, res);
+
+    expect(res.body.success).toBe(false);
+    expect(res.body.message).toMatch(/only after it is delivered/i);
+  });
+
+  it("should error when order not found", async () => {
+    const user = await userModel.create({
+      name: "Rater",
+      email: "rate@example.com",
+      password: "x",
+    });
+
+    const fakeId = new mongoose.Types.ObjectId().toString();
+
+    const req = createMockReq({
+      userId: user._id.toString(),
+      orderId: fakeId,
+      rating: 5,
+    });
+    const res = createMockRes();
+
+    await rateOrder(req, res);
+
+    expect(res.body.success).toBe(false);
+    expect(res.body.message).toBe("Order not found");
+  });
 });
 
 // ----------------------------
@@ -584,6 +1074,39 @@ describe("Driver order flows", () => {
     expect(res.body.message).toMatch(/only drivers/i);
   });
 
+  it("driverAvailableOrders should handle database errors", async () => {
+    const driver = await userModel.create({
+      name: "Driver",
+      email: "d@example.com",
+      password: "x",
+      isDriver: true,
+    });
+
+    jest
+      .spyOn(console, "error")
+      .mockImplementation(() => {});
+
+    const sortMock = jest
+      .fn()
+      .mockRejectedValueOnce(new Error("DB error"));
+
+    const spy = jest
+      .spyOn(orderModel, "find")
+      .mockReturnValue({ sort: sortMock });
+
+    const req = createMockReq({ userId: driver._id.toString() });
+    const res = createMockRes();
+
+    await driverAvailableOrders(req, res);
+
+    expect(spy).toHaveBeenCalledWith({
+      status: "Looking for driver",
+    });
+    expect(sortMock).toHaveBeenCalledWith({ date: -1 });
+    expect(res.body.success).toBe(false);
+    expect(res.body.message).toBe("Error fetching orders for driver");
+  });
+
   it("driverMyOrders should list orders for driver", async () => {
     const driver = await userModel.create({
       name: "Driver",
@@ -615,6 +1138,39 @@ describe("Driver order flows", () => {
     await driverMyOrders(req, res);
     expect(res.body.success).toBe(true);
     expect(res.body.data).toHaveLength(1);
+  });
+
+  it("driverMyOrders should handle database errors", async () => {
+    const driver = await userModel.create({
+      name: "Driver",
+      email: "d2@example.com",
+      password: "x",
+      isDriver: true,
+    });
+
+    jest
+      .spyOn(console, "error")
+      .mockImplementation(() => {});
+
+    const sortMock = jest
+      .fn()
+      .mockRejectedValueOnce(new Error("DB error"));
+
+    const spy = jest
+      .spyOn(orderModel, "find")
+      .mockReturnValue({ sort: sortMock });
+
+    const req = createMockReq({ userId: driver._id.toString() });
+    const res = createMockRes();
+
+    await driverMyOrders(req, res);
+
+    expect(spy).toHaveBeenCalledWith({
+      driverId: driver._id.toString(),
+    });
+    expect(sortMock).toHaveBeenCalledWith({ date: -1 });
+    expect(res.body.success).toBe(false);
+    expect(res.body.message).toBe("Error fetching driver orders");
   });
 
   it("driverClaimOrder should claim order and move to Driver assigned", async () => {
@@ -658,6 +1214,121 @@ describe("Driver order flows", () => {
     );
   });
 
+  it("driverClaimOrder should reject non-driver", async () => {
+    const user = await userModel.create({
+      name: "User",
+      email: "ud@example.com",
+      password: "x",
+      isDriver: false,
+    });
+
+    const order = await orderModel.create({
+      userId: "u1",
+      items: [],
+      amount: 10,
+      address: { formatted: "A" },
+      status: "Looking for driver",
+    });
+
+    const req = createMockReq({
+      userId: user._id.toString(),
+      orderId: order._id.toString(),
+    });
+    const res = createMockRes();
+
+    await driverClaimOrder(req, res);
+
+    expect(res.body.success).toBe(false);
+    expect(res.body.message).toBe("Only drivers can claim orders");
+  });
+
+  it("driverClaimOrder should reject when order is not Looking for driver", async () => {
+    const driver = await userModel.create({
+      name: "Driver X",
+      email: "dx@example.com",
+      password: "x",
+      isDriver: true,
+    });
+
+    const order = await orderModel.create({
+      userId: "u1",
+      items: [],
+      amount: 10,
+      address: { formatted: "A" },
+      status: "Food Preparing",
+    });
+
+    const req = createMockReq({
+      userId: driver._id.toString(),
+      orderId: order._id.toString(),
+    });
+    const res = createMockRes();
+
+    await driverClaimOrder(req, res);
+
+    expect(res.body.success).toBe(false);
+    expect(res.body.message).toMatch(/not looking for a driver/);
+  });
+
+  it("driverClaimOrder should reject if already claimed by another driver", async () => {
+    const driver1 = await userModel.create({
+      name: "Driver 1",
+      email: "d1@example.com",
+      password: "x",
+      isDriver: true,
+    });
+    const driver2 = await userModel.create({
+      name: "Driver 2",
+      email: "d2@example.com",
+      password: "x",
+      isDriver: true,
+    });
+
+    const order = await orderModel.create({
+      userId: "u1",
+      items: [],
+      amount: 10,
+      address: { formatted: "A" },
+      status: "Looking for driver",
+      driverId: driver1._id,
+    });
+
+    const req = createMockReq({
+      userId: driver2._id.toString(),
+      orderId: order._id.toString(),
+    });
+    const res = createMockRes();
+
+    await driverClaimOrder(req, res);
+
+    expect(res.body.success).toBe(false);
+    expect(res.body.message).toBe(
+      "Order already claimed by another driver"
+    );
+  });
+
+  it("driverClaimOrder should return error when order not found", async () => {
+    const driver = await userModel.create({
+      name: "Driver Y",
+      email: "dy@example.com",
+      password: "x",
+      isDriver: true,
+    });
+
+    const fakeId = new mongoose.Types.ObjectId().toString();
+
+    const req = createMockReq({
+      userId: driver._id.toString(),
+      orderId: fakeId,
+    });
+    const res = createMockRes();
+
+    await driverClaimOrder(req, res);
+
+    expect(res.body.success).toBe(false);
+    expect(res.body.message).toBe("Order not found");
+  });
+
   it("driverMarkDelivered should set status to Delivered", async () => {
     const driver = await userModel.create({
       name: "Driver D",
@@ -692,8 +1363,6 @@ describe("Driver order flows", () => {
 
     const updated = await orderModel.findById(order._id);
     expect(updated.status).toBe("Delivered");
-
-    // deliveredAt may not be in the schema, but it IS set on the response object
     expect(res.body.data.deliveredAt).toBeDefined();
 
     expect(mockIo.emit).toHaveBeenCalledWith(
@@ -703,5 +1372,113 @@ describe("Driver order flows", () => {
         driverId: driver._id.toString(),
       })
     );
+  });
+
+  it("driverMarkDelivered should reject non-driver", async () => {
+    const user = await userModel.create({
+      name: "User ND",
+      email: "nd@example.com",
+      password: "x",
+      isDriver: false,
+    });
+
+    const req = createMockReq({
+      userId: user._id.toString(),
+      orderId: new mongoose.Types.ObjectId().toString(),
+    });
+    const res = createMockRes();
+
+    await driverMarkDelivered(req, res);
+
+    expect(res.body.success).toBe(false);
+    expect(res.body.message).toBe("Only drivers can mark delivery");
+  });
+
+  it("driverMarkDelivered should reject when driver is not assigned to this order", async () => {
+    const driver1 = await userModel.create({
+      name: "Driver 1",
+      email: "dd1@example.com",
+      password: "x",
+      isDriver: true,
+    });
+    const driver2 = await userModel.create({
+      name: "Driver 2",
+      email: "dd2@example.com",
+      password: "x",
+      isDriver: true,
+    });
+
+    const order = await orderModel.create({
+      userId: "u1",
+      items: [],
+      amount: 10,
+      address: { formatted: "A" },
+      status: "Out for delivery",
+      driverId: driver1._id,
+    });
+
+    const req = createMockReq({
+      userId: driver2._id.toString(),
+      orderId: order._id.toString(),
+    });
+    const res = createMockRes();
+
+    await driverMarkDelivered(req, res);
+
+    expect(res.body.success).toBe(false);
+    expect(res.body.message).toBe("You are not assigned to this order");
+  });
+
+  it("driverMarkDelivered should reject illegal status transitions", async () => {
+    const driver = await userModel.create({
+      name: "Driver IL",
+      email: "il@example.com",
+      password: "x",
+      isDriver: true,
+    });
+
+    const order = await orderModel.create({
+      userId: "u1",
+      items: [],
+      amount: 10,
+      address: { formatted: "A" },
+      status: "Food Preparing",
+      driverId: driver._id,
+    });
+
+    const req = createMockReq({
+      userId: driver._id.toString(),
+      orderId: order._id.toString(),
+    });
+    const res = createMockRes();
+
+    await driverMarkDelivered(req, res);
+
+    expect(res.body.success).toBe(false);
+    expect(res.body.message).toMatch(
+      /Cannot mark order as delivered from status/
+    );
+  });
+
+  it("driverMarkDelivered should return error when order not found", async () => {
+    const driver = await userModel.create({
+      name: "Driver NF",
+      email: "nf@example.com",
+      password: "x",
+      isDriver: true,
+    });
+
+    const fakeId = new mongoose.Types.ObjectId().toString();
+
+    const req = createMockReq({
+      userId: driver._id.toString(),
+      orderId: fakeId,
+    });
+    const res = createMockRes();
+
+    await driverMarkDelivered(req, res);
+
+    expect(res.body.success).toBe(false);
+    expect(res.body.message).toBe("Order not found");
   });
 });

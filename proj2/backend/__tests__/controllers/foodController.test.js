@@ -1,4 +1,12 @@
-import { describe, it, expect, beforeEach, jest } from "@jest/globals";
+import {
+  describe,
+  it,
+  expect,
+  beforeEach,
+  afterEach,
+  jest,
+} from "@jest/globals";
+import fs from "fs";
 import foodModel from "../../models/foodModel.js";
 import {
   listFood,
@@ -7,15 +15,14 @@ import {
 } from "../../controllers/foodController.js";
 
 describe("Food Controller", () => {
-  let req, res;
+  let req;
+  let res;
 
   beforeEach(() => {
     req = {
       body: {},
-      file: {
-        buffer: Buffer.from("fake-image-data"),
-        mimetype: "image/png",
-      },
+      query: {},
+      files: {},
     };
     res = {
       json: jest.fn(),
@@ -23,64 +30,75 @@ describe("Food Controller", () => {
     jest.clearAllMocks();
   });
 
-  describe("listFood", () => {
-    it("should list all foods with base64 images", async () => {
-      const mockFoods = [
-        {
-          _id: "507f1f77bcf86cd799439011",
-          name: "Test Food 1",
-          description: "Description 1",
-          price: 10.99,
-          category: "Category 1",
-          image: {
-            data: Buffer.from("image1"),
-            contentType: "image/png",
-          },
-          toObject: jest.fn().mockReturnValue({
-            _id: "507f1f77bcf86cd799439011",
-            name: "Test Food 1",
-            description: "Description 1",
-            price: 10.99,
-            category: "Category 1",
-          }),
-        },
-        {
-          _id: "507f1f77bcf86cd799439012",
-          name: "Test Food 2",
-          description: "Description 2",
-          price: 15.99,
-          category: "Category 2",
-          image: {
-            data: Buffer.from("image2"),
-            contentType: "image/jpeg",
-          },
-          toObject: jest.fn().mockReturnValue({
-            _id: "507f1f77bcf86cd799439012",
-            name: "Test Food 2",
-            description: "Description 2",
-            price: 15.99,
-            category: "Category 2",
-          }),
-        },
-      ];
+  afterEach(() => {
+    jest.restoreAllMocks();
+  });
 
-      foodModel.find = jest.fn().mockReturnValue({
-        map: jest.fn().mockImplementation((callback) => {
-          return mockFoods.map(callback);
+  // --------------------
+  // listFood
+  // --------------------
+  describe("listFood", () => {
+    it("should list all foods and convert image/model buffers to base64", async () => {
+      const doc1 = {
+        toObject: () => ({
+          _id: "1",
+          name: "Pizza",
+          description: "Cheesy",
+          price: 10,
+          category: "Main",
+          image: { data: Buffer.from("image-1"), contentType: "image/png" },
+          model3D: {
+            data: Buffer.from("model-1"),
+            contentType: "model/gltf-binary",
+          },
         }),
-      });
+      };
+
+      const doc2 = {
+        toObject: () => ({
+          _id: "2",
+          name: "Burger",
+          description: "Juicy",
+          price: 8,
+          category: "Main",
+          image: { data: Buffer.from("image-2"), contentType: "image/jpeg" },
+          // no model3D here on purpose
+        }),
+      };
+
+      jest.spyOn(foodModel, "find").mockResolvedValue([doc1, doc2]);
 
       await listFood(req, res);
 
       expect(foodModel.find).toHaveBeenCalledWith({});
-      expect(res.json).toHaveBeenCalled();
-      expect(res.json.mock.calls[0][0].success).toBe(true);
-      expect(res.json.mock.calls[0][0].data).toBeDefined();
-      expect(res.json.mock.calls[0][0].data.length).toBe(2);
+      expect(res.json).toHaveBeenCalledWith({
+        success: true,
+        data: expect.any(Array),
+      });
+
+      const payload = res.json.mock.calls[0][0];
+      expect(payload.data).toHaveLength(2);
+
+      const [f1, f2] = payload.data;
+
+      expect(f1.image.data).toBe(
+        Buffer.from("image-1").toString("base64")
+      );
+      expect(f1.model3D.data).toBe(
+        Buffer.from("model-1").toString("base64")
+      );
+
+      expect(f2.image.data).toBe(
+        Buffer.from("image-2").toString("base64")
+      );
+      expect(f2.model3D).toBeUndefined();
     });
 
     it("should handle errors when listing foods", async () => {
-      foodModel.find = jest.fn().mockRejectedValue(new Error("Database error"));
+      jest.spyOn(console, "log").mockImplementation(() => {});
+      jest
+        .spyOn(foodModel, "find")
+        .mockRejectedValue(new Error("Database error"));
 
       await listFood(req, res);
 
@@ -91,67 +109,133 @@ describe("Food Controller", () => {
     });
   });
 
+  // --------------------
+  // addFood
+  // --------------------
   describe("addFood", () => {
-    it("should add food successfully", async () => {
+    it("should add food successfully with image only", async () => {
       req.body = {
         name: "New Food",
-        description: "Food description",
+        description: "Delicious",
         price: 12.99,
         category: "Category",
       };
-
-      // Mock foodModel as a constructor that returns an object with save method
-      const mockFoodInstance = {
-        _id: "507f1f77bcf86cd799439011",
-        name: "New Food",
-        save: jest.fn().mockResolvedValue(true),
+      req.files = {
+        image: [
+          {
+            buffer: Buffer.from("fake-image-data"),
+            mimetype: "image/png",
+          },
+        ],
       };
 
-      // Since foodModel is imported, we need to mock it differently
-      // Instead of mocking the constructor, we'll verify the response
+      const saveMock = jest.fn().mockResolvedValue({});
+      jest.spyOn(foodModel.prototype, "save").mockImplementation(saveMock);
 
-      // ES modules don't allow reassigning imports
-      // Test function structure instead
-      expect(typeof addFood).toBe("function");
+      await addFood(req, res);
 
-      // The actual implementation would work with proper Mongoose setup
-      // This validates the function exists
+      expect(foodModel.prototype.save).toHaveBeenCalled();
+      expect(res.json).toHaveBeenCalledWith({
+        success: true,
+        message: "Food Added",
+      });
+    });
+
+    it("should add food successfully with image and 3D model", async () => {
+      req.body = {
+        name: "3D Food",
+        description: "Has model",
+        price: 20,
+        category: "Category",
+      };
+      req.files = {
+        image: [
+          {
+            buffer: Buffer.from("img-data"),
+            mimetype: "image/jpeg",
+          },
+        ],
+        model3D: [
+          {
+            buffer: Buffer.from("model-data"),
+            mimetype: "model/gltf-binary",
+          },
+        ],
+      };
+
+      const saveMock = jest.fn().mockResolvedValue({});
+      jest.spyOn(foodModel.prototype, "save").mockImplementation(saveMock);
+
+      await addFood(req, res);
+
+      expect(foodModel.prototype.save).toHaveBeenCalled();
+      expect(res.json).toHaveBeenCalledWith({
+        success: true,
+        message: "Food Added",
+      });
     });
 
     it("should handle errors when adding food", async () => {
       req.body = {
-        name: "New Food",
-        description: "Food description",
-        price: 12.99,
+        name: "Error Food",
+        description: "Boom",
+        price: 10,
         category: "Category",
       };
+      req.files = {
+        image: [
+          {
+            buffer: Buffer.from("img-data"),
+            mimetype: "image/png",
+          },
+        ],
+      };
 
-      // Test error handling structure
-      expect(typeof addFood).toBe("function");
+      jest.spyOn(console, "log").mockImplementation(() => {});
+      jest
+        .spyOn(foodModel.prototype, "save")
+        .mockRejectedValue(new Error("Database error"));
 
-      // Function exists and has correct structure
-      // Full testing would require proper Mongoose model mocking
+      await addFood(req, res);
+
+      expect(res.json).toHaveBeenCalledWith({
+        success: false,
+        message: "Error",
+      });
     });
   });
 
+  // --------------------
+  // removeFood
+  // --------------------
   describe("removeFood", () => {
     it("should remove food successfully", async () => {
-      req.body = {
-        id: "507f1f77bcf86cd799439011",
-      };
+      req.body = { id: "507f1f77bcf86cd799439011" };
 
       const mockFood = {
         _id: "507f1f77bcf86cd799439011",
         image: "image.png",
       };
 
-      foodModel.findById = jest.fn().mockResolvedValue(mockFood);
-      foodModel.findByIdAndDelete = jest.fn().mockResolvedValue(mockFood);
+      jest.spyOn(foodModel, "findById").mockResolvedValue(mockFood);
+      jest
+        .spyOn(foodModel, "findByIdAndDelete")
+        .mockResolvedValue(mockFood);
+
+      const unlinkMock = jest
+        .spyOn(fs, "unlink")
+        .mockImplementation((filePath, cb) => {
+          if (cb) cb(null);
+        });
 
       await removeFood(req, res);
 
       expect(foodModel.findById).toHaveBeenCalledWith(
         "507f1f77bcf86cd799439011"
+      );
+      expect(unlinkMock).toHaveBeenCalledWith(
+        "uploads/image.png",
+        expect.any(Function)
       );
       expect(foodModel.findByIdAndDelete).toHaveBeenCalledWith(
         "507f1f77bcf86cd799439011"
@@ -163,12 +247,11 @@ describe("Food Controller", () => {
     });
 
     it("should handle errors when removing food", async () => {
-      req.body = {
-        id: "507f1f77bcf86cd799439011",
-      };
+      req.body = { id: "507f1f77bcf86cd799439011" };
 
-      foodModel.findById = jest
-        .fn()
+      jest.spyOn(console, "log").mockImplementation(() => {});
+      jest
+        .spyOn(foodModel, "findById")
         .mockRejectedValue(new Error("Database error"));
 
       await removeFood(req, res);
