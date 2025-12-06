@@ -15,6 +15,7 @@ import {
   driverMyOrders,
   driverClaimOrder,
   driverMarkDelivered,
+  userImpact,
 } from "../controllers/orderController.js";
 
 const orderRouter = express.Router();
@@ -28,7 +29,7 @@ orderRouter.post("/verify", verifyOrder);
 orderRouter.post("/placecod", authMiddleware, placeOrderCod);
 orderRouter.post("/claim", authMiddleware, claimOrder);
 orderRouter.post("/assign-shelter", assignShelter);
-
+orderRouter.get("/impact", authMiddleware, userImpact);
 // NEW route – user rates a delivered order
 orderRouter.post("/rate", authMiddleware, rateOrder);
 orderRouter.get("/driver/available", authMiddleware, driverAvailableOrders);

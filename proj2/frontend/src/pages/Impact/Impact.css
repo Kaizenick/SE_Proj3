@@ -1,0 +1,93 @@
+.impact-container {
+  max-width: 900px;
+  margin: 40px auto;
+  padding: 20px;
+}
+
+.impact-summary {
+  display: flex;
+  gap: 20px;
+  flex-wrap: wrap;
+  margin-bottom: 30px;
+}
+
+.impact-card {
+  flex: 1 1 250px;
+  background: #ffffff;
+  padding: 20px;
+  border-radius: 12px;
+  box-shadow: 0 0 10px #ddd;
+  text-align: center;
+}
+
+.impact-card.pending {
+  border-top: 4px solid #ff9800;
+}
+
+.impact-card.donated {
+  border-top: 4px solid #4caf50;
+}
+
+.impact-number {
+  font-size: 48px;
+  font-weight: bold;
+  margin: 10px 0;
+}
+
+.impact-label {
+  font-size: 14px;
+  color: #555;
+}
+
+.impact-lists {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 20px;
+}
+
+.impact-list-column {
+  flex: 1 1 350px;
+}
+
+.impact-order-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.impact-order-item {
+  background: #fafafa;
+  padding: 10px 14px;
+  border-radius: 8px;
+  margin-bottom: 8px;
+  display: flex;
+  gap: 10px;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 14px;
+}
+
+.impact-pill {
+  padding: 3px 8px;
+  border-radius: 999px;
+  font-size: 11px;
+  background: #ffe7c2;
+  color: #8a4b00;
+}
+
+.donated-pill {
+  background: #d4f7d8;
+  color: #205723;
+}
+
+.impact-empty {
+  font-size: 13px;
+  color: #777;
+}
+
+.impact-loading,
+.impact-error {
+  text-align: center;
+  margin-top: 40px;
+  font-size: 18px;
+}

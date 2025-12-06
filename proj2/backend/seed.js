@@ -9,7 +9,9 @@ import Shelter from "./models/shelterModel.js";
 
 dotenv.config();
 
-const MONGO_URI = "mongodb://127.0.0.1:27018/food-del";
+const MONGO_URI =
+  process.env.MONGODB_URI || "mongodb://127.0.0.1:27017/food-del";
+
 
 // ------------------ FOOD ITEMS ------------------
 const foodItems = [

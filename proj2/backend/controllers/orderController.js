@@ -766,6 +766,49 @@ const driverMarkDelivered = async (req, res) => {
   }
 };
 
+
+// ⬇ ADD THIS in orderController.js (near other handlers)
+const userImpact = async (req, res) => {
+  try {
+    // authMiddleware puts userId into req.body.userId (same as userOrders)
+    const userId = req.body.userId;
+
+    if (!userId) {
+      return res.status(401).json({
+        success: false,
+        message: "User not authenticated",
+      });
+    }
+
+    // 1) orders you cancelled that are in "Redistribute" (waiting to be donated)
+    const pendingOrders = await orderModel
+      .find({ userId, status: STATUS.REDISTRIBUTE })
+      .sort({ date: -1 });
+
+    // 2) orders that reached "Donated"
+    const donatedOrders = await orderModel
+      .find({ userId, status: STATUS.DONATED })
+      .sort({ date: -1 });
+
+    return res.json({
+      success: true,
+
+      totalPendingOrders: pendingOrders.length,
+      totalDonatedOrders: donatedOrders.length,
+
+      pendingOrders,
+      donatedOrders,
+    });
+  } catch (err) {
+    console.error("userImpact error:", err);
+    return res.status(500).json({
+      success: false,
+      message: "Failed to compute impact",
+    });
+  }
+};
+
+
 export {
   placeOrder,
   listOrders,
@@ -781,4 +824,5 @@ export {
   driverMyOrders,
   driverClaimOrder,
   driverMarkDelivered,
+  userImpact,
 };

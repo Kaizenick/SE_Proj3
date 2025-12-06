@@ -135,6 +135,11 @@ const Navbar = ({ setShowLogin }) => {
                 <img src={assets.bag_icon} alt="Orders" /> <p>Orders</p>
               </li>
               <hr />
+              <li onClick={() => navigate("/impact")}>
+                <img src={assets.impact_icon || assets.profile_icon} alt="Impact" />
+                <p>My Impact</p>
+              </li>
+              <hr />
               {/* Logout */}
               <li onClick={logout}>
                 <img src={assets.logout_icon} alt="Logout" /> <p>Logout</p>

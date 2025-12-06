@@ -17,6 +17,7 @@ import DriverLogin from "./pages/DriverLogin.jsx";
 import DriverOrders from "./pages/DriverOrders.jsx";
 import ProtectedRoute from "./components/ProtectedRoute";
 import Profile from "./pages/Profile/Profile"; // ⭐ NEW
+import Impact from "./pages/Impact/Impact";
 
 const App = () => {
   const [showLogin, setShowLogin] = useState(false);
@@ -37,6 +38,8 @@ const App = () => {
           <Route path="/verify" element={<Verify />} />
           <Route path="/driver/register" element={<DriverRegister />} />
           <Route path="/driver/login" element={<DriverLogin />} />
+          <Route path="/impact" element={<ProtectedRoute> <Impact /> </ProtectedRoute>} />
+
           <Route
             path="/driver/orders"
             element={
