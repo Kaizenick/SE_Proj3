@@ -8,8 +8,8 @@
   </a>
 
   <!-- Code Coverage -->
-  <a href="https://codecov.io/gh/shreyas457/SE_G25">
-    <img src="https://codecov.io/gh/shreyas457/SE_G25/branch/main/graph/badge.svg?token=ENTA0IQ3HM" />
+  <a href="https://codecov.io/gh/Divyaka9/SE_G25">
+    <img src="https://codecov.io/gh/Divyaka9/SE_G25/branch/main/graph/badge.svg" />
   </a>
 
   <!-- ESLint Style Checker -->
