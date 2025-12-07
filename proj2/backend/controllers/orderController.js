@@ -766,7 +766,6 @@ const driverMarkDelivered = async (req, res) => {
   }
 };
 
-
 // ⬇ ADD THIS in orderController.js (near other handlers)
 const userImpact = async (req, res) => {
   try {
@@ -807,7 +806,6 @@ const userImpact = async (req, res) => {
     });
   }
 };
-
 
 export {
   placeOrder,
