@@ -8,23 +8,23 @@
   </a>
 
   <!-- Code Coverage -->
-  <a href="#">
-    <img src="https://img.shields.io/badge/Coverage-Codecov-blue?logo=codecov" />
+  <a href="https://codecov.io/gh/shreyas457/SE_G25">
+    <img src="https://codecov.io/gh/shreyas457/SE_G25/branch/main/graph/badge.svg?token=ENTA0IQ3HM" />
   </a>
 
-  <!-- CI Status -->
-  <a href="#">
-    <img src="https://img.shields.io/badge/CI-GitHub%20Actions-green?logo=githubactions" />
+  <!-- ESLint Style Checker -->
+  <a href="https://github.com/shreyas457/SE_G25/actions/workflows/lint.yml">
+    <img src="https://github.com/shreyas457/SE_G25/actions/workflows/lint.yml/badge.svg?branch=feat/env-config" />
   </a>
 
-  <!-- Lint -->
-  <a href="#">
-    <img src="https://img.shields.io/badge/Lint-ESLint-4B32C3?logo=eslint&logoColor=white" />
+  <!-- ESLint Syntax Checker -->
+  <a href="https://github.com/shreyas457/SE_G25/actions/workflows/lint.yml">
+    <img src="https://github.com/shreyas457/SE_G25/actions/workflows/lint.yml/badge.svg?branch=feat/env-config" />
   </a>
 
-  <!-- Prettier -->
-  <a href="#">
-    <img src="https://img.shields.io/badge/Formatter-Prettier-ff69b4?logo=prettier&logoColor=white" />
+  <!-- Prettier Formatter -->
+  <a href="https://github.com/shreyas457/SE_G25/actions/workflows/format.yml">
+    <img src="https://github.com/shreyas457/SE_G25/actions/workflows/format.yml/badge.svg?branch=feat/env-config" />
   </a>
 
   <!-- License -->
