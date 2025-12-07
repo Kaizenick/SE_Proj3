@@ -54,7 +54,9 @@
 The system seamlessly integrates:
 
 ✔ Customer Ordering System (Food App)  
+✔ Veg / Non-Veg Preference Filtering
 ✔ Restaurant Admin Dashboard  
+✔ Driver Dashboard for Order Deliveries 
 ✔ Shelter Dashboard for Donations  
 ✔ Real-time Redistribution Queue  
 ✔ 3D Menu Item Visualization  
@@ -68,7 +70,7 @@ ByteBite reduces food waste by enabling unused/cancelled meals to be claimed or 
 
 ### **1️⃣ Customer Ordering (Food App)**  
 - User registration and login  
-- Browse menu, add items to cart  
+- Browse menu with Veg / Non-Veg preferences and add items to cart  
 - Place orders via:  
   - Stripe integration  
   - Cash-on-delivery  
@@ -96,6 +98,17 @@ Restaurants can donate food to partner shelters:
 - Record donation in `reroutes` collection  
 - Shelters receive the donation and update status  
 - Donation history is viewable for audits  
+
+---
+
+### **4️⃣ Driver Dashboard (Delivery Workforce)**
+The Driver Dashboard enables smooth order delivery management:
+- Drivers authenticate with secure login  
+- View all assigned deliveries  
+- Update delivery stage:
+  - **Delivered**  
+- Real-time sync with customer order tracking  
+- Reduce manual admin workload by automating delivery updates  
 
 ---
 
@@ -201,11 +214,9 @@ proj2/
 
 ---
 
-## 🎥 Demo (Placeholder)
+## 🎥 Demo 
 
-Replace with your actual link:
-
-[![Watch the demo](https://img.youtube.com/vi/XXXXXXXX/hqdefault.jpg)](https://youtu.be/XXXXXXXX)
+[![Watch the demo](https://img.youtube.com/vi/1IyLCHuaQmE/hqdefault.jpg)](https://youtu.be/1IyLCHuaQmE)
 
 ---
 
@@ -217,7 +228,7 @@ We separate previous contributors from new contributors.
 
 | Name | Unity ID |
 |------|--------|
-| Smruthi Bangalore Thandava Murthy |  |
+| Smruthi Bangalore Thandava Murthy | sbangal6 |
 | Vineeta Vishwas Bhujle | vbhujle |
 | Swasti Sadanand | ssadana |
 | Shreyas Raviprasad | sravipr |
@@ -237,10 +248,10 @@ We separate previous contributors from new contributors.
 
 ## 🛠 Work Completed by Our Team
 
-1. **Implemented Feature A** – Placeholder description  
-2. **Refactored Module B** – Placeholder refactor  
-3. **Fixed Issue C** – Placeholder fix  
-4. **Added Enhancement D** – Placeholder UI/workflow upgrade  
+1. **Driver Dashboard** - Built a Driver Dashboard that lets drivers view “Ready for Pickup” orders, manage accepted and out-for-delivery orders, and seamlessly mark deliveries as completed.
+2. **Shelter Dashboard** - Built a Shelter Dashboard that allows shelters to accept or decline donation requests and view their donation history, including all past fulfilled orders.
+3. **Preference Filters** -  Lets customers tag preferences (Veg / No Sugar) so notifications stay meaningful and targeted.
+4. **Enhanced UI experienced** - Implemented dynamic menu-item filtering and optimizing dashboard layout and responsiveness.
 
 ---
 
